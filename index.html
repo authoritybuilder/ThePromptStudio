@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- V9.9.9 deploy marker - search for V9.9.6 in DevTools to confirm latest version -->
+<!-- V9.9.11 deploy marker - search for V9.9.6 in DevTools to confirm latest version -->
 <html lang="en-AU">
 <head>
 <meta charset="UTF-8">
@@ -6503,17 +6503,19 @@ function renderAllNav() {
 
 // V5: Make nav sections collapsible. Reads state.navCollapsed and persists to localStorage.
 function initNavCollapsibles() {
-  // V9.9.7: Force the cleaner v9.9.7 nav defaults. Old localStorage entries had
-  // aol/btype expanded by default, which made the sidebar a wall of repeated "All 151"
-  // sections. We now keep only Niches expanded; user toggles still persist on top.
+  // V9.9.10: HARD RESET — bump localStorage key to invalidate any stale saved state.
+  // User reported screenshots still showing the old wall-of-filters layout. This
+  // clears every prior version of the saved state and forces the v9.9.10 defaults.
   try {
-    const NAV_VERSION_KEY = 'promptStudio_navCollapsed_v997';
+    const NAV_VERSION_KEY = 'promptStudio_navCollapsed_v9910';
+    // Clear ALL prior versions
+    localStorage.removeItem('promptStudio_navCollapsed');
+    localStorage.removeItem('promptStudio_navCollapsed_v997');
+    localStorage.removeItem('promptStudio_navCollapsed_v998');
+    localStorage.removeItem('promptStudio_navCollapsed_v999');
     const saved = localStorage.getItem(NAV_VERSION_KEY);
     if (saved) {
       state.navCollapsed = Object.assign({}, state.navCollapsed, JSON.parse(saved));
-    } else {
-      // Clear any pre-v9.9.7 saved state
-      localStorage.removeItem('promptStudio_navCollapsed');
     }
   } catch (e) {}
 
@@ -6531,7 +6533,7 @@ function initNavCollapsibles() {
       if (!sec) return;
       sec.classList.toggle('collapsed');
       state.navCollapsed[id] = sec.classList.contains('collapsed');
-      try { localStorage.setItem('promptStudio_navCollapsed_v997', JSON.stringify(state.navCollapsed)); } catch (err) {}
+      try { localStorage.setItem('promptStudio_navCollapsed_v9910', JSON.stringify(state.navCollapsed)); } catch (err) {}
     });
   });
 }
@@ -7042,6 +7044,18 @@ async function renderTiles() {
 function applyDestinationFilter(scenes) {
   const dest = state.destinationFilter || 'all';
   if (dest === 'all') return scenes;
+  
+  // V9.9.10: Use scene.bestPlatforms as PRIMARY signal (was missing before, causing
+  // niche+destination filter combos to return 0 results). bestPlatforms is the canonical
+  // enriched field populated from aspect-ratio compatibility matrix.
+  const platformAliases = {
+    'twitter': ['twitter', 'twitter / x', 'x'],
+    'web': ['website', 'web'],
+    'instagram': ['instagram', 'ig'],
+  };
+  const matchTerms = (platformAliases[dest] || [dest]).map(s => s.toLowerCase());
+  
+  // Secondary keyword match for prompts that mention platforms by name
   const keywords = {
     'instagram': ['instagram','reel','story','feed','carousel'],
     'linkedin': ['linkedin','professional headshot','press shot'],
@@ -7056,8 +7070,21 @@ function applyDestinationFilter(scenes) {
     'teachable': ['teachable','course'], 'thinkific': ['thinkific','course'],
     'mighty': ['mighty','networks'], 'print': ['print','flyer','brochure']
   };
+  
   return scenes.filter(scene => {
     if (!scene) return false;
+    
+    // PRIMARY: scene.bestPlatforms field match (works for niche-internal filtering)
+    const bp = String(scene.bestPlatforms || '').toLowerCase();
+    if (bp) {
+      for (const term of matchTerms) {
+        // Word match — split bp by comma and check exact match per-token
+        const tokens = bp.split(',').map(t => t.trim());
+        if (tokens.includes(term)) return true;
+      }
+    }
+    
+    // SECONDARY: legacy keyword match
     const v = scene.v3 || {};
     if (v.social_platforms && v.social_platforms.includes(dest)) return true;
     const kws = keywords[dest] || [dest];

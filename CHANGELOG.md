@@ -1,5 +1,238 @@
 # CHANGELOG — The Prompt Studio
 
+## v9.9.11 — Magnetic outcome-driven Display Names — 2026-05-02
+
+### What changed
+
+You asked for prompt names that magnetise people to generate them. The previous names like "Discovery Call for Career Coaches" or "Hero Campaign for Advertising" described the asset technically but said nothing about the OUTCOME. Now col B leads with the use-case + the result.
+
+### Pattern: `[What it is] — [What it does] for [Niche]`
+
+The em-dash splits the structural label from the outcome promise. The user reads "Booking Page Hero" and knows the asset, then "Builds Instant Trust" tells them what they get for using it.
+
+### Sample transformations
+
+**Coaches/Consultants funnel:**
+
+| Before | After |
+|---|---|
+| Discovery Call for Career Coaches | Booking Page Hero — Builds Instant Trust for Career Coaches |
+| Strategy Session for Career Coaches | Strategy Session — Sells Your Premium Package for Career Coaches |
+| Group Coaching for Career Coaches | Cohort Photo — Makes Them Want In for Career Coaches |
+| Workshop Delivery for Career Coaches | Workshop in Action — Drives Sign-ups for Career Coaches |
+| Client Breakthrough for Career Coaches | Breakthrough Moment — Case Study Power for Career Coaches |
+| Toolkit Reveal for Career Coaches | Toolkit Hero — Lead Magnet Magnet for Career Coaches |
+| Programme Welcome for Career Coaches | Warm Welcome — Onboarding Hero for Career Coaches |
+| Signature Method for Career Coaches | Signature Method — Position Your IP for Career Coaches |
+
+**TikTok / social platforms:**
+
+| Before | After |
+|---|---|
+| Hook Frame for Tiktok | Hook Frame — Stop the Scroll for Tiktok |
+| Pattern Break for Tiktok | Pattern Break — Disrupt Attention for Tiktok |
+| CTA Card for Tiktok | CTA Card — Drives the Click for Tiktok |
+| Cover Thumbnail for Tiktok | Cover Thumbnail — Earns the Play for Tiktok |
+| Quote Pull for Tiktok | Quote Pull — Editorial Premium for Tiktok |
+
+**Editorial / Magazine:**
+
+| Before | After |
+|---|---|
+| Cover Story for Bloggers | Cover Story — Magazine-Grade Impact for Bloggers |
+| Feature Spread for Bloggers | Feature Spread — Premium Editorial for Bloggers |
+| Pull Quote Visual for Bloggers | Pull Quote — Save & Share Card for Bloggers |
+| Opening Spread for Bloggers | Opening Spread — Magazine Launch for Bloggers |
+
+**E-commerce:**
+
+| Before | After |
+|---|---|
+| Hero Product Shot for E-commerce | Hero Product Shot — Catalogue Headline for E-commerce |
+| Lifestyle in Use for E-commerce | Lifestyle in Use — Aspirational Sell for E-commerce |
+| Detail Crop for E-commerce | Detail Crop — Texture & Craft for E-commerce |
+| On Model for E-commerce | On Model — Apparel Conversion for E-commerce |
+
+**Advertising:**
+
+| Before | After |
+|---|---|
+| Hero Campaign for Advertising | Hero Campaign — One-Image Sell for Advertising |
+| Supporting Asset for Advertising | Supporting Asset — Brand System for Advertising |
+| Banner Adaptation for Advertising | Banner — Wide-Format Conversion for Advertising |
+| Mobile Adaptation for Advertising | Mobile Hero — Vertical Conversion for Advertising |
+
+### Naming principles applied
+
+1. **Lead with the asset, end with the result.** "Booking Page Hero — Builds Instant Trust" not "An image for booking pages that helps build trust"
+2. **Active verbs.** "Drives Sign-ups", "Stops the Scroll", "Earns the Play", "Sells the Room"
+3. **Concrete outcomes.** "Builds Instant Trust" not "improves perception"; "One-Image Sell" not "marketing visual"
+4. **Magazine-style cadence.** Em-dash separator gives editorial rhythm
+5. **Niche suffix preserved.** "for [Niche]" stays so the targeting is still clear
+
+### Coverage
+
+I wrote 130+ named magnetic templates covering every Base Scene type in the database:
+- Coach/consultant funnel (Discovery Call, Strategy Session, Group Coaching, Workshop Delivery, etc.) — 1,500+ rows
+- Consulting specialist (Whitepaper Cover, Boardroom Brief, Strategy Whiteboard, etc.) — 800+ rows
+- Editorial (Cover Story, Feature Spread, Pull Quote, etc.) — 600+ rows
+- Web (About Page, Sales Page, Landing Page, Trust Section, Founder Story) — 400+ rows
+- Email (Welcome Email, Newsletter Header, Promo Banner) — 200+ rows
+- Social platforms (Hook Frame, Pattern Break, CTA Card) — 300+ rows
+- Advertising (Hero Campaign, Supporting Asset, Banner, Mobile, Print) — 350+ rows
+- E-commerce (Hero Product Shot, Lifestyle in Use, Detail Crop) — 250+ rows
+- Stock/generic (Hero Image, Blog Header, Lifestyle Shot) — 1,000+ rows
+- Plus course creator, wellness, speakers, community, print events
+
+For unmapped scenes (~5%) the format is `[Scene] — Brand Hero for [Niche]` as a sensible fallback.
+
+### Verification
+
+- 4,437/4,437 names are globally unique
+- 0 within-niche duplicates
+- All technical jargon (Tungsten Warm, Backlit Halo, Side-Lit Drama, etc.) cleaned via friendly lighting map
+- Verified via jsdom render: tiles show new magnetic names in the actual DOM
+
+### Files
+
+| File | Status | Size |
+|---|---|---|
+| `index.html` | App v8.9.8.11 — same render path, just better data | ~676 KB |
+| `index.json` | v9.9.11 — 4,437 magnetic names | ~6.0 MB |
+| `PROMPTSTUDIO-rebuilt.zip` | 4,437 prompt JSONs with magnetic names | ~15.2 MB |
+| `PromptStudioPro-v9-database.xlsx` | v9.9.11 — col B is now magnetic | ~4.4 MB |
+
+### Deploy
+
+```bash
+cd ThePromptStudio
+cp /path/to/v9.9.11/* .
+unzip -o PROMPTSTUDIO-rebuilt.zip
+git add -A
+git commit -m "v8.9.8.11 + v9.9.11 — magnetic outcome-driven Display Names"
+git push origin main
+```
+
+Hard-refresh in incognito. Verify via DevTools Network → search Response for `V9.9.11 deploy marker`.
+
+---
+
+## v9.9.10 — Three real bugs traced and fixed — 2026-05-02
+
+### Bug 1: Nav sidebar still showed expanded filter sections
+
+The user's screenshot showed CHANNEL TYPE, AREA OF LIFE, BUSINESS TYPE all expanded with "All 151" entries. Even though my v9.9.7 state defaults set them to collapsed, the user's browser was either reading a stale `localStorage` entry or the deploy hadn't gone through.
+
+**Fix:** Bumped the localStorage version key from `promptStudio_navCollapsed_v997` to `promptStudio_navCollapsed_v9910`. The init code now explicitly removes ALL prior version keys (`v997`, `v998`, `v999`, plus the original unversioned key) before reading the new one. Anyone who had stale state from any earlier version will get a clean slate.
+
+```js
+localStorage.removeItem('promptStudio_navCollapsed');
+localStorage.removeItem('promptStudio_navCollapsed_v997');
+localStorage.removeItem('promptStudio_navCollapsed_v998');
+localStorage.removeItem('promptStudio_navCollapsed_v999');
+```
+
+Verified via jsdom: all 5 filter sections (channeltype, aol, btype, industry, platform) collapsed by default. Only category (Niches) expanded.
+
+### Bug 2: Destination filter returned 0 results inside niches
+
+User reported "Accountability Coaches → Email" showed "0 of 28 prompts". I traced this to `applyDestinationFilter()` at line 7042. Despite v9.9.8 enriching every prompt's `bestPlatforms` field, this filter function never read it:
+
+```js
+// BEFORE (v9.9.9 and earlier)
+return scenes.filter(scene => {
+  const v = scene.v3 || {};
+  if (v.social_platforms && v.social_platforms.includes(dest)) return true;
+  const haystack = `${v.business_moment || ''} ${v.base_scene || ''} ${scene.category || ''} ${scene.categoryLabel || ''} ${scene.name || ''}`.toLowerCase();
+  return kws.some(k => haystack.includes(k));
+});
+```
+
+It did keyword matching on `business_moment / base_scene / category / categoryLabel / name`. None of those contain "email" for an Accountability Coaches Discovery Call prompt — even though the prompt IS email-compatible (16:9 hero image works fine in newsletter templates).
+
+**Fix:** `applyDestinationFilter()` now uses `scene.bestPlatforms` as the PRIMARY signal:
+
+```js
+// AFTER (v9.9.10)
+const bp = String(scene.bestPlatforms || '').toLowerCase();
+if (bp) {
+  const tokens = bp.split(',').map(t => t.trim());
+  for (const term of matchTerms) {
+    if (tokens.includes(term)) return true;
+  }
+}
+// ... falls through to legacy keyword match if no bestPlatforms hit
+```
+
+Verified results for Accountability Coaches niche (28 prompts total):
+
+| Destination | Before | After |
+|---|---|---|
+| Email | 0 | **21** |
+| LinkedIn | 0 | **28** |
+| Pinterest | 0 | **17** |
+| Instagram | 0 | **15** |
+| Facebook | 0 | **28** |
+
+### Bug 3: Display names still contained photographic jargon
+
+User reported "Tungsten" still appearing in tile names. Audit found 9 jargon patterns in 4,437 prompts:
+
+| Jargon | Occurrences | Replaced with |
+|---|---|---|
+| Tungsten Warm | 98 | Warm Indoor Light |
+| Backlit Halo | 76 | Glowing Backlight |
+| Side-Lit Drama | 55 | Dramatic Side Light |
+| Top-Down Daylight | 46 | Bright Daylight |
+| Cinematic Rim | 39 | Cinematic Edge Light |
+| Op-Ed Portrait | 23 | Article Author Portrait |
+| Masthead Hero | 23 | Magazine Header Image |
+| Photo Essay Frame | 23 | Photo Story Image |
+| Atelier | 19 | Workshop Style |
+
+**Fix:** Updated cols B (Display Name) and C (Prompt Title) in the spreadsheet itself with user-friendly terms. Verified 0 instances of the jargon list remain in 4,437 rows.
+
+Sample after fix:
+```
+Before: "Hero Campaign · Tungsten Warm for Advertising"
+After:  "Hero Campaign · Warm Indoor Light for Advertising"
+
+Before: "Op-Ed Portrait for Bloggers"
+After:  "Article Author Portrait for Bloggers"
+
+Before: "Masthead Hero for Bloggers"  
+After:  "Magazine Header Image for Bloggers"
+
+Before: "Photo Essay Frame for Bloggers"
+After:  "Photo Story Image for Bloggers"
+```
+
+This is **at the data layer** — the workbook itself, the index.json, and every per-prompt JSON in the zip. Not a runtime substitution.
+
+### Files
+
+| File | Status | Size |
+|---|---|---|
+| `index.html` | App v8.9.8.10 — destination filter fix + nav reset | ~676 KB |
+| `index.json` | v9.9.10 — clean Display Names | ~6.0 MB |
+| `PROMPTSTUDIO-rebuilt.zip` | 4,437 prompt JSONs with clean names | ~15.1 MB |
+| `PromptStudioPro-v9-database.xlsx` | v9.9.10 — col B/C jargon-free | ~4.4 MB |
+
+### Deploy
+
+```bash
+cd ThePromptStudio
+cp /path/to/v9.9.10/* .
+unzip -o PROMPTSTUDIO-rebuilt.zip
+git add -A
+git commit -m "v8.9.8.10 + v9.9.10 — nav reset + destination filter fix + jargon-free names"
+git push origin main
+```
+
+Hard-refresh in incognito. Verify via DevTools Network → search Response for `V9.9.10 deploy marker`.
+
+---
+
 ## v9.9.9 — Tile names are EXACT col B/C/D + brand bar truly compact — 2026-05-02
 
 ### What was actually wrong (and why my previous fixes didn't fully land)
