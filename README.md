@@ -1,6 +1,6 @@
-# The Prompt Studio v8.9.5 (App) + v9.7 (Database)
+# The Prompt Studio v8.9.6 (App) + v9.8 (Database)
 
-**4,419 elite AI image prompts × 132 niches × 8 stock-image categories × 29 unified render styles × 15 regions × hex/RGB colour input × saved presets × data-driven tile filters × clean platform/profession split × verified export pipeline × fast photo upload.**
+**4,437 elite AI image prompts × 151 niches × 8 stock-image categories × 29 unified render styles × 15 regions × hex/RGB colour input with hex labels × saved presets × data-driven tile filters × clean platform/profession split × cross-filter inclusivity × friendly user-facing titles × gender presentation field × compact modal dropdowns × verified export pipeline with regional context in all 8 formats.**
 
 **Repository:** https://github.com/authoritybuilder/ThePromptStudio
 **Live deployment** (after GitHub Pages enabled): `https://authoritybuilder.github.io/ThePromptStudio/`
@@ -9,90 +9,86 @@
 
 ---
 
-## What's new in v9.7.2 (UX patch)
+## What's new in v9.8 (11-item brief)
 
-- **New repo:** updated all references from `PromptStudioPro` to `ThePromptStudio`
-- **Business type as dropdown:** wizard Step 1 shrinks by ~200-280px — single compact `<select>` instead of a 17-tile grid
-- **Fast photo upload:** ~4-6× perceived speedup. Switched from `readAsDataURL` (base64 of full image) to `createObjectURL` + canvas-compressed 320px thumbnails. Only the first photo runs feature extraction; subsequent photos just contribute to season-detection voting
-
----
-
-## What v9.7 brought before this patch
-
-- **29 unified render styles** in 7 families (replacing 32 fragmented IDs across wizard + modal)
-- **Data-driven tile filter chips** with live count badges — every used aspect ratio, background, and render is reachable
-- **Regional context in all 8 export formats** — Australia/UK/Japan/etc. wizard selection now flows into MD, SKILL.md, JSON, Notion, Skool, Canva Brief, Custom GPT, Claude Project
-- **Authority Builder Pack:** 1,024 new prompts (8 stock categories × 128 niches)
-- **Saved presets** in the modal with localStorage persistence
-- **Hex / RGB color input** in the wizard
-- **Channel Type filter** splitting platforms (22) from professions (110)
+1. **Prompt count corrected** — header and search now show "4,437 prompts" (was "3,231")
+2. **Niches sidebar scrolls** — `max-height: 50vh` with custom scrollbar, all 151 niches reachable
+3. **Nail Salons niche** — 18 new prompts (8 stock + 10 niche-specific)
+4. **YouTube reclassified** — 70 rows moved from Industry "Youtube/Youtubers" to "Creator Economy"
+5. **Cross-filter inclusivity** — Breakthrough Coaches × Twitter went from 0 → 25 prompts; same fix across all profession × platform combinations
+6. **Em dashes removed** — 374 em dashes replaced with spaced hyphens
+7. **Palette hex codes** — each brand-bar swatch now shows its hex code, updates live
+8. **Friendly prompt titles** — fixed swapped Display Name / Prompt Title columns; index.json `name` now always reads like "Strategy Session Sales Page Hero for Academic Coaches"
+9. **Readability** — simplified 11 high-traffic UI strings to ~grade 9
+10. **Gender field** — new wizard field with polite framing, flows into `GENDER PRESENTATION` prompt line
+11. **BG/Render as dropdowns** — modal dropdowns with optgroups by family instead of chip grids; the prompt text now sits much higher in the modal
 
 ---
 
-## Files in this release
+## Files
 
 | File | Status | Size |
 |---|---|---|
-| `index.html` | App v8.9.5 — new repo URL, business type dropdown, fast photo upload | ~625 KB |
-| `index.json` | v9.7 catalogue (4,419 scenes) | 3.5 MB |
-| `PROMPTSTUDIO-rebuilt.zip` | All 4,419 prompt JSONs | 15.8 MB |
-| `PromptStudioPro-v9-database.xlsx` | v9.7 — 24 sheets, 4,419 × 45 cols | 3.94 MB |
-| `README.md` + `CHANGELOG.md` | Updated for v9.7.2 | — |
+| `index.html` | App v8.9.6 — all 11 items | 633 KB |
+| `index.json` | v9.8 catalogue (4,437 scenes, friendly names) | 3.4 MB |
+| `PROMPTSTUDIO-rebuilt.zip` | All 4,437 prompt JSONs | 14.5 MB |
+| `PromptStudioPro-v9-database.xlsx` | v9.8 — 24 sheets, 4,437 × 45 cols | 4.0 MB |
 
 ---
 
-## Deploy (first time with the new repo)
+## Deploy
 
 ```bash
-git clone https://github.com/authoritybuilder/ThePromptStudio.git
 cd ThePromptStudio
-cp /path/to/v9.7.2/index.html .
-cp /path/to/v9.7.2/index.json .
-cp /path/to/v9.7.2/PROMPTSTUDIO-rebuilt.zip .
-cp /path/to/v9.7.2/PromptStudioPro-v9-database.xlsx .
-cp /path/to/v9.7.2/README.md .
-cp /path/to/v9.7.2/CHANGELOG.md .
+cp /path/to/v9.8/index.html .
+cp /path/to/v9.8/index.json .
+cp /path/to/v9.8/PROMPTSTUDIO-rebuilt.zip .
+cp /path/to/v9.8/PromptStudioPro-v9-database.xlsx .
+cp /path/to/v9.8/README.md .
+cp /path/to/v9.8/CHANGELOG.md .
 unzip -o PROMPTSTUDIO-rebuilt.zip
 git add -A
-git commit -m "v8.9.5 + v9.7.2 — initial commit on new repo"
+git commit -m "v8.9.6 + v9.8 — 11-item targeted patch"
 git push origin main
 ```
 
-Then enable GitHub Pages:
-1. Go to https://github.com/authoritybuilder/ThePromptStudio/settings/pages
-2. Source: Deploy from a branch
-3. Branch: `main` / Folder: `/ (root)`
-4. Save
+If GitHub Pages isn't enabled yet: Settings → Pages → Source: `main` branch → root folder.
 
-The live URL becomes `https://authoritybuilder.github.io/ThePromptStudio/` after a few minutes. Hard-refresh after deploy.
+Hard-refresh after deploy: Cmd+Shift+R (laptop) or clear Safari data (iPhone).
 
 ---
 
 ## Test after deploy
 
-1. **Wizard Step 1** — confirm Business Type is a single dropdown, not a tile grid. Pick "Other..." → confirm the text input appears below.
-2. **Wizard Step 2** — upload 5+ photos at once. Confirm "Loading…" placeholders appear immediately, replaced by thumbnails as compression completes (should be visibly faster than before).
-3. **Wizard Step 2** — first photo upload toast should read something like "✓ Detected: medium skin (warm), rich warm brown, dark brown to deep brown eyes".
-4. **Tile filter coverage** — open any niche. Confirm each filter row shows count badges and only chips that exist in the data.
-5. **Channel Type filter** — sidebar → "Channel Type" → "Platforms / Channels" → confirm 22 platforms shown.
-6. **Saved preset** — open a prompt, customise background + render, click "+ Save current", name it. Open a different prompt → apply the preset → modal chips switch.
-7. **Regional context in MD export** — Wizard Step 1 → Country → Australia → save wizard → open any prompt → modal export bar → MD download → confirm "Regional Context (V97)" section is present in the file.
+1. **Prompt count** — header reads "4,437 Professional Prompts"
+2. **Niches sidebar** — long list of niches scrolls inside the section, doesn't push the page
+3. **Nail Salons niche** — appears in sidebar under Profession; click → 18 prompts
+4. **YouTube** — Industry filter no longer lists "Youtube" or "Youtubers"; Channel Type → Platform still shows YouTube
+5. **Cross-filter** — search for or browse Breakthrough Coaches, then platform-filter to Twitter/X — prompts appear
+6. **No em dashes** — scan any wizard hint, modal label, button label
+7. **Palette hex codes** — wizard step 2, then look at brand-bar palette: hex codes visible under each swatch
+8. **Friendly titles** — open any prompt; the title says "Hero Image for [Niche]" not "Quote-Card Pull Visual"
+9. **Readability** — wizard subtitle reads "Set up your prompts in 60 seconds"
+10. **Gender field** — wizard Step 1 has new field 3a "How should images of you be rendered?"
+11. **Dropdowns** — open any prompt, modal shows Background and Render Style as compact `<select>` elements; the prompt text is visible above the fold
 
 ---
 
-## All 11 items from the original brief — complete
+## All 11 items from this brief — complete
 
-1. ✓ Pixel/platform terminology consistency *(v9.6)*
-2. ✓ Hex / RGB colour input *(v9.6)*
-3. ✓ Cartoon choices align with popup tiles *(v9.7)*
-4. ✓ UI/wizard/tile terminology cross-reference *(v9.6)*
-5. ✓ Reduce wasted space in popup tiles *(v9.6)*
-6. ✓ Cross-reference uploaded spreadsheet, add missing prompts *(v9.6 — 1,024 new)*
-7. ✓ In-depth quality review *(v9.6 + v9.7.1 final debug pass)*
-8. ✓ Nav bar filters optimised *(v9.6 channel type + v9.7.1 data-driven tile filters)*
-9. ✓ Save favorite preset selections *(v9.6)*
-10. ✓ Export functions optimised *(v9.7 augmentation pipeline + v9.7.1 regional context)*
-11. ✓ Categories: platforms split from niches *(v9.6)*
+| # | Item | Status |
+|---|---|---|
+| 1 | Prompt count display update | ✓ |
+| 2 | Niches sidebar scroll bar | ✓ |
+| 3 | Nail Salons niche | ✓ |
+| 4 | YouTube as Industry → Creator Economy | ✓ |
+| 5 | Cross-filter empty state fixed | ✓ |
+| 6 | Em dashes removed | ✓ |
+| 7 | Palette home page hex codes | ✓ |
+| 8 | Friendly prompt titles | ✓ |
+| 9 | Readability score 9 | ✓ |
+| 10 | Gender field on wizard | ✓ |
+| 11 | BG/Render Style as dropdowns | ✓ |
 
 ---
 
