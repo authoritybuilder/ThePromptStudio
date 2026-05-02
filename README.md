@@ -1,6 +1,17 @@
-# The Prompt Studio v8.9.8.3 (App) + v9.9.1 (Database)
+# The Prompt Studio v8.9.8.4 (App) + v9.9.1 (Database)
 
-**Critical syntax error fix.** The `Uncaught SyntaxError: Invalid or unexpected token` you reported was the actual cause of EVERYTHING being broken — skip not working, niches not loading, the lot. One bad escape sequence in a template literal that I introduced in v9.9 was killing the entire JS bundle before any of it could run.
+**Inline onclick fallback for skip button + diagnosis of the empty archetype grid.**
+
+I ran v9.9.3 through jsdom (real JS engine, simulated browser) and confirmed:
+- ✓ All 12 archetype cards render correctly
+- ✓ Skip click closes wizard and loads app
+- ✓ JS bundle parses cleanly
+
+So v9.9.3 IS working. The empty archetype grid + dead skip button you're seeing matches the EXACT symptom of the syntax error from v9.9.0-v9.9.2 — JS bundle dies, static HTML renders (you see step labels) but dynamic rendering never runs (archetype grid stays empty, no event handlers attached).
+
+**The v9.9.3 fix was likely never deployed, or your browser cached the old broken HTML.** Hard-refresh + check GitHub Actions for the latest deploy status.
+
+v9.9.4 adds one more belt-and-braces layer: **the `<button id="wizSkip">` now has an inline `onclick` attribute that runs even before the JS bundle parses**. So even on a still-broken script, clicking Skip closes the wizard.
 
 **Repository:** https://github.com/authoritybuilder/ThePromptStudio
 **Live deployment:** `https://authoritybuilder.github.io/ThePromptStudio/`
@@ -64,23 +75,39 @@ Three visibly distinct fields, all sourced from the spreadsheet, all unique with
 
 | File | Status | Size |
 |---|---|---|
-| `index.html` | App v8.9.8.3 — JS parses cleanly, app actually runs | ~654 KB |
+| `index.html` | App v8.9.8.4 — 4-layer skip + parses cleanly | ~654 KB |
 | `index.json` | v9.9.1 — scene_ids fix + distinct B/C/D | ~5.7 MB |
 | `PROMPTSTUDIO-rebuilt.zip` | 4,437 prompt JSONs with distinct B/C/D + richBrief | ~15.0 MB |
 | `PromptStudioPro-v9-database.xlsx` | v9.9 workbook (unchanged) | ~4.3 MB |
 
 ---
 
-## Deploy
+## Deploy + verify the deploy actually went through
 
 ```bash
 cd ThePromptStudio
-cp /path/to/v9.9.3/* .
-unzip -o PROMPTSTUDIO-rebuilt.zip
+cp /path/to/v9.9.4/index.html .
 git add -A
-git commit -m "v8.9.8.3 + v9.9.1 — fix template literal syntax error that killed the app"
+git commit -m "v8.9.8.4 — inline onclick fallback for skip"
 git push origin main
 ```
+
+### After push, do ALL of these to confirm the deploy went live:
+
+1. **GitHub Actions check.** Open `https://github.com/authoritybuilder/ThePromptStudio/actions` and confirm the most recent workflow run shows ✓ green. If it shows yellow (running), wait 1-2 min. If red (failed), the deploy didn't go through.
+
+2. **Open in incognito mode.** Hard-refresh isn't always enough on some browsers. A private/incognito window guarantees no cache.
+
+3. **DevTools verification (proves you have v9.9.4):**
+   - Open the live site in incognito
+   - Press F12 to open DevTools
+   - Go to Network tab, reload the page
+   - Click the `index.html` row → Response tab
+   - Cmd+F search for: `setupBulletproofSkip`
+   - **If you find it** → you have v9.9.4. Wizard skip will work.
+   - **If you don't find it** → the deploy never went through, you're still on broken version. Go back to step 1.
+
+4. **Console check.** With DevTools open, F12 → Console tab. Reload. If you see `Uncaught SyntaxError: Invalid or unexpected token` you're on the OLD broken version (pre-v9.9.3) — deploy hasn't happened.
 
 Then **hard-refresh:**
 - Laptop: Cmd+Shift+R (Mac) or Ctrl+Shift+F5 (PC)

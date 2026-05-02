@@ -1545,7 +1545,7 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
     </div>
 
     <div class="wizard-footer">
-      <button type="button" class="btn-skip" id="wizSkip" data-i18n="btn.skip">Skip for now</button>
+      <button type="button" class="btn-skip" id="wizSkip" data-i18n="btn.skip" onclick="(function(){var w=document.getElementById('wizard');var a=document.getElementById('app');if(w)w.style.display='none';if(a)a.style.display='block';document.body.classList.remove('wizard-open');try{if(typeof completeWizard==='function')completeWizard();else if(typeof initApp==='function')initApp();}catch(e){console.warn('[skip-inline]',e);}})();return false;">Skip for now</button>
       <button class="btn-wizard" id="wizComplete" data-i18n="btn.complete">Complete Setup &rarr;</button>
     </div>
   </div>

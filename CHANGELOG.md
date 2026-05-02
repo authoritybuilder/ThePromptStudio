@@ -1,5 +1,71 @@
 # CHANGELOG — The Prompt Studio
 
+## v9.9.4 — Inline onclick fallback + diagnosis — 2026-05-02
+
+### What I confirmed by automated test
+
+I ran the v9.9.3 file through jsdom (a real JS engine simulating a browser). Result:
+- ✓ JS bundle parses cleanly (`node --check` passes)
+- ✓ All 12 archetype cards render in `#archetypeGrid` after `initWizard()` runs
+- ✓ Clicking `#wizSkip` causes wizard `display:none` + app `display:block` immediately
+
+So v9.9.3 IS working when the script actually runs. The screenshots showing "empty archetype grid + dead skip button" match the symptom of **the v9.9.0/v9.9.1/v9.9.2 syntax error from before v9.9.3** — the script never executed, so dynamic content never rendered and the bulletproof skip handler never registered.
+
+The most likely cause is **the v9.9.3 fix was never deployed, or the browser cached the old broken version**. Either way I've added one more layer of defence:
+
+### Layer 4 — inline onclick on the button itself
+
+The `<button id="wizSkip">` now has `onclick="(function(){...})()"` directly in the HTML attribute. This runs the moment the user clicks, regardless of:
+- Whether any JS bundle has loaded
+- Whether any init function has run
+- Whether any syntax errors exist elsewhere in the script
+- Whether `initWizard()` got partway through
+
+The inline handler closes the wizard, shows the app, then tries `completeWizard()` if it exists or falls back to `initApp()`. If both throw, the wizard is still closed — the user is never trapped.
+
+### Four layers of defence now
+
+1. **Inline `onclick` attribute** — runs even before JS bundle parses
+2. **Document-level capture-phase listener** (`setupBulletproofSkip`) — runs at script load, catches any click on `#wizSkip`
+3. **Per-element `onclick`** (in `initWizard`) — original wiring
+4. **try/catch in `completeWizard`** — soaks up field-read errors
+
+For skip to fail now, all four would have to fail simultaneously. Layer 1 alone is bulletproof because it's literally part of the static HTML.
+
+### Why archetypes were empty in your screenshot
+
+Same root cause: in v9.9.0–v9.9.2, the syntax error stopped JS execution before `initWizard()` ran. Static HTML rendered fine (the field cards "11 Logo", "12 Brand Archetypes", "13 Visual Inspiration") but the `archetypeGrid.appendChild(card)` loop never executed, leaving the grid empty. v9.9.3 fixed the syntax error, so once that ACTUALLY deploys, archetypes will appear and skip will work via all 4 layers.
+
+### Files
+
+| File | Status | Size |
+|---|---|---|
+| `index.html` | App v8.9.8.4 — 4-layer skip + parses cleanly | ~654 KB |
+| `index.json` | v9.9.1 (unchanged) | ~5.7 MB |
+| `PROMPTSTUDIO-rebuilt.zip` | v9.9.1 prompts (unchanged) | ~15.0 MB |
+| `PromptStudioPro-v9-database.xlsx` | v9.9 (unchanged) | ~4.3 MB |
+
+### Deploy + verify the deploy
+
+```bash
+cd ThePromptStudio
+cp /path/to/v9.9.4/index.html .
+git add -A
+git commit -m "v8.9.8.4 — inline onclick fallback for skip button"
+git push origin main
+```
+
+**Critical check after push:**
+
+1. Go to `https://github.com/authoritybuilder/ThePromptStudio/actions` and confirm the latest deployment succeeded (green checkmark, not yellow/red).
+2. Open the live site in **incognito/private mode** (so no cache).
+3. Open browser DevTools → Network tab → reload. Find the `index.html` response. Click it → Response tab. Search for `setupBulletproofSkip` — if it's there, you have v9.9.4. If not, the deploy didn't go through and you're still on the broken version.
+4. If on v9.9.4: skip button works, archetypes render, all v9.9 features functional.
+
+If after all that the skip STILL doesn't work, the inline onclick guarantees the wizard at minimum closes and the app appears — making the issue diagnosable by other means.
+
+---
+
 ## v9.9.3 — Critical syntax error fix — 2026-05-02
 
 **This is what broke the page** (the `Uncaught SyntaxError: Invalid or unexpected token` error you reported). Without this fix, NONE of the v9.9 / v9.9.1 / v9.9.2 work would run because the entire JS bundle fails to parse — that's why the skip button looked like it wasn't working, why niches wouldn't load tiles, why everything was dead. One bad escape sequence in a template literal, and the whole app silently dies.
