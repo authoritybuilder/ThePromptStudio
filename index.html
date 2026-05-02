@@ -4988,14 +4988,10 @@ async function fetchScene(catKey, sceneId) {
     if (!r.ok) throw new Error('not ok');
     scene = await r.json();
   } catch (e) {
-    // V4.0 + V9.9.15 FIX: Seed from searchIndex so name/tagline/sub survive fetch failure.
-    // Without this, v9913SelfHealScene writes "Brand Asset" fallbacks over good data.
-    const indexEntry = (state.searchIndex || []).find(s => s.id === sceneId) || {};
-    scene = Object.assign({
-      id: sceneId,
-      category: catKey,
-      categoryLabel: (cat && cat.label) || catKey.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-    }, indexEntry);
+    const _ie=(state.searchIndex||[]).find(s=>s.id===sceneId)||{};
+    scene=Object.assign({id:sceneId,category:catKey,
+      categoryLabel:(cat&&cat.label)||catKey.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()),
+    },_ie);
   }
 
   // V9.9.13/14: SELF-HEAL FIRST (before isOldFormat check) — this rewrites stale names
@@ -6843,9 +6839,8 @@ async function renderDestinationFiltered(wrap) {
     return;
   }
   
-  // V9.9.15: Use searchIndex data directly — no fetchScene calls for tile rendering
-  const valid = matching.map(s => slimToTile(s));
-  // (removed scenes.filter(Boolean) — slimToTile always returns an object)
+  const valid=matching.map(s=>_slimToTile(s));
+  document.getElementById('catDesc').innerHTML = `<span class="cat-stat">${valid.length}</span> prompts for ${destLabel} \u00B7 <a href="#" id="backToAllLink" class="link-accent">\u2190 Back to all suggestions</a>`;
   renderTilesList(wrap, valid);
   
   setTimeout(() => {
@@ -6883,12 +6878,9 @@ async function renderBrowseAllMode(wrap) {
   const end = state.browseAllPage * pageSize;
   const slice = allIdx.slice(start, end);
   
-  // V9.9.15: Use searchIndex data directly — no fetchScene calls for tile rendering
-  const valid = slice.map(s => slimToTile(s));
-
-  // Re-render to ensure clean state
-  wrap.innerHTML = '';
-  renderTilesList(wrap, valid);
+  const valid=slice.map(s=>_slimToTile(s));
+  wrap.innerHTML='';
+  renderTilesList(wrap,valid);
   
   // Add load-more button if there are more
   if (end < allIdx.length) {
@@ -6940,10 +6932,9 @@ async function renderTiles() {
       return;
     }
     
-    // V9.9.15: Use searchIndex data directly — no fetchScene calls for tile rendering
-    const validScenes = results.slice(0, 60).map(s => slimToTile(s));
-    const filtered = applyDestinationFilter(validScenes);
-    renderTilesList(wrap, filtered);
+    const validScenes=results.slice(0,60).map(s=>_slimToTile(s));
+    const filtered=applyDestinationFilter(validScenes);
+    renderTilesList(wrap,filtered);
     return;
   }
 
@@ -7049,33 +7040,7 @@ async function renderTiles() {
         return;
       }
       
-      // V4.5: Fetch the full scenes for this group, with timeout fallback
-      // V9.9.15 PERF FIX: Render directly from searchIndex data — no per-tile fetchScene calls.
-      // fetchScene fires 54+ HTTP requests on the home screen (6 tiles × 9 groups) and
-      // returns corrupted fallback text when any request fails or is slow.
-      // The searchIndex already has name (col B), tagline (col C), sub (col D) from index.json.
-      // Full JSON is only fetched when the user actually clicks a tile (in tile.onclick).
-      const tiles = group.scenes.map(s => ({
-        id: s.id,
-        name: s.name || s.id,
-        magneticName: s.name,
-        tagline: s.tagline || '',
-        sub: s.sub || '',
-        cat: s.cat,
-        category: s.cat,
-        catLabel: s.catLabel,
-        categoryLabel: s.catLabel,
-        aspect: s.aspect,
-        dimensions: s.dimensions,
-        recommendedDimensions: s.recommendedDimensions,
-        bestPlatforms: s.bestPlatforms,
-        keywords: s.keywords || [],
-        archetype: s.archetype,
-        lighting: s.lighting,
-        aolPrimary: s.aolPrimary,
-        v3: { aspect: s.aspect || '16:9', archetype: s.archetype || '', lighting_variant: s.lighting || 'editorial' }
-      }));
-      renderTilesList(grid, tiles);
+      renderTilesList(grid,group.scenes.map(s=>_slimToTile(s)));
       
       wrap.appendChild(section);
     }
@@ -7114,12 +7079,11 @@ async function renderTiles() {
     ? `<span class="cat-eyebrow">${categoryGroup}</span><br>${cat.label}`
     : cat.label;
 
-  wrap.innerHTML = '<p class="tile-loading">Loading prompts...</p>';
-  // V9.9.15: Use searchIndex data directly — no fetchScene calls for tile rendering
-  const catSceneIds = new Set(cat.scene_ids || []);
-  const allScenes = (state.searchIndex || []).filter(s => catSceneIds.has(s.id) || s.cat === state.cat);
-  const validScenes = allScenes.map(s => slimToTile(s));
-  const filtered = applyDestinationFilter(validScenes);
+  wrap.innerHTML='<p class="tile-loading">Loading prompts...</p>';
+  const _cids=new Set(cat.scene_ids||[]);
+  const allScenes=(state.searchIndex||[]).filter(s=>_cids.has(s.id)||(s.cat||s.category)===state.cat);
+  const validScenes=allScenes.map(s=>_slimToTile(s));
+  const filtered=applyDestinationFilter(validScenes);
 
   // V5: Removed archetype display (e.g. "Creator (70%) / Hero (20%) / Magician (10%)") from cat description per user spec
   const aolBadge = cat.aol ? ` · <span class="cat-aol-badge">${cat.aol}</span>` : '';
@@ -7324,35 +7288,22 @@ function v7RenderDestSizesPanel() {
   } // end if (false)
 }
 
-
-// V9.9.15: Convert a slim searchIndex scene into a tile-ready object.
-// Avoids fetchScene calls for tile rendering — tiles only need index.json fields.
-// Full JSON is still fetched when the user clicks a tile (in tile.onclick).
-function slimToTile(s) {
+function _slimToTile(s) {
   if (!s) return null;
   return {
-    id: s.id,
-    name: s.name || s.id,
-    magneticName: s.name || s.id,
-    displayName: s.name || s.id,
-    tagline: s.tagline || '',
-    sub: s.sub || '',
-    cat: s.cat || s.category,
-    category: s.cat || s.category,
-    catLabel: s.catLabel || s.categoryLabel || '',
-    categoryLabel: s.catLabel || s.categoryLabel || '',
-    aspect: s.aspect,
-    dimensions: s.dimensions,
-    recommendedDimensions: s.recommendedDimensions,
-    bestPlatforms: s.bestPlatforms || '',
-    keywords: s.keywords || [],
-    archetype: s.archetype || '',
-    lighting: s.lighting || '',
-    aolPrimary: s.aolPrimary || '',
-    v3: { aspect: s.aspect || '16:9', archetype: s.archetype || '', lighting_variant: s.lighting || 'editorial' }
+    id:s.id, name:s.name||s.id, magneticName:s.name||s.id,
+    displayName:s.name||s.id, tagline:s.tagline||'', sub:s.sub||'',
+    cat:s.cat||s.category, category:s.cat||s.category,
+    catLabel:s.catLabel||s.categoryLabel||'',
+    categoryLabel:s.catLabel||s.categoryLabel||'',
+    aspect:s.aspect, dimensions:s.dimensions,
+    recommendedDimensions:s.recommendedDimensions,
+    bestPlatforms:s.bestPlatforms||'', keywords:s.keywords||[],
+    archetype:s.archetype||'', lighting:s.lighting||'',
+    aolPrimary:s.aolPrimary||'',
+    v3:{aspect:s.aspect||'16:9',archetype:s.archetype||'',lighting_variant:s.lighting||'editorial'}
   };
 }
-
 function renderTilesList(wrap, scenes) {
   // V97: Apply tile-level filters (Aspect / Background / Render)
   const tf = state.tileFilters || {};
@@ -7448,7 +7399,7 @@ function renderTilesList(wrap, scenes) {
       <div class="tile-body" ${bodyStyleAttr}>
         <div class="tile-name" ${nameStyleAttr}>${displayName}</div>
         ${tagline ? `<div class="tile-tagline" ${taglineStyleAttr}>${tagline}</div>` : ''}
-        ${summary ? `<div class="tile-summary" ${summaryHidden}><strong style="color:var(--accent-dark);font-size:0.9em;">What you get:</strong> ${summary}</div>` : ''}
+        ${summary ? `<div class="tile-summary" ${summaryHidden}>${summary}</div>` : ''}
         ${pills ? `<div class="tile-bestfor" ${pillsHidden}>${pills}</div>` : ''}
       </div>
     `;
