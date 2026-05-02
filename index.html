@@ -201,7 +201,8 @@ body.pause-animations *, body.pause-animations *::before, body.pause-animations 
 .inspiration-content.expanded { display: block; }
 
 .wizard-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--border); }
-.btn-skip { color: var(--text-muted); text-decoration: none; font-size: 13px; cursor: pointer; }
+.btn-skip { color: var(--text-muted); text-decoration: none; font-size: 13px; cursor: pointer; background: transparent; border: none; padding: 8px 12px; font-family: inherit; }
+.btn-skip:hover { color: var(--primary); text-decoration: underline; }
 .btn-wizard { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: white; border: none; padding: 13px 30px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; box-shadow: var(--shadow); transition: all 0.2s ease; }
 .btn-wizard:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(197,168,128,0.3); }
 
@@ -1544,7 +1545,7 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
     </div>
 
     <div class="wizard-footer">
-      <a class="btn-skip" id="wizSkip" data-i18n="btn.skip">Skip for now</a>
+      <button type="button" class="btn-skip" id="wizSkip" data-i18n="btn.skip">Skip for now</button>
       <button class="btn-wizard" id="wizComplete" data-i18n="btn.complete">Complete Setup &rarr;</button>
     </div>
   </div>
@@ -8771,9 +8772,9 @@ ${(state.communityPlatforms && state.communityPlatforms.length) ? state.communit
 ${cat.label || 'N/A'} - ${cat.description || ''}
 
 ## Master Context (V99 — full prompt psychology + cinematic brief)
-${v99RichBrief ? `\\`\\`\\`
+${v99RichBrief ? `\`\`\`
 ${v99RichBrief}
-\\`\\`\\`` : '_(rich brief not available — open this prompt in the modal first)_'}
+\`\`\`` : '_(rich brief not available — open this prompt in the modal first)_'}
 
 ${v99IndustryContext ? `### Industry Context (deep niche knowledge)
 ${v99IndustryContext}
@@ -8882,9 +8883,9 @@ ${sceneVisualDesc}
 ${v99RichBrief ? `## Master Context (V99 — full prompt psychology)
 This is the deep context the prompt is built on. When generating images of this type, weave ALL of these elements together:
 
-\\`\\`\\`
+\`\`\`
 ${v99RichBrief}
-\\`\\`\\`
+\`\`\`
 
 The Design Principle and Conversion Intent are AUTHORITATIVE — they describe the psychological response the image must trigger.
 ` : ''}
@@ -8963,9 +8964,9 @@ Upload these to the Claude Project for grounding:
 - Your competitor analysis or differentiation doc
 
 ${v99RichBrief ? `## Master Context for ${sceneName} (V99 — full prompt psychology)
-\\`\\`\\`
+\`\`\`
 ${v99RichBrief}
-\\`\\`\\`
+\`\`\`
 
 When the user requests this asset type, weave ALL elements above into the generated prompt. The Design Principle and Conversion Intent describe the psychological response the image must trigger in the viewer.
 ` : ''}
@@ -9736,6 +9737,48 @@ try {
   const savedLang = localStorage.getItem('promptStudio_lang');
   if (savedLang && I18N[savedLang]) state.lang = savedLang;
 } catch (e) {}
+// V99.2: BULLETPROOF WIZARD SKIP — document-level delegated click handler.
+// Why this exists: the per-element wizSkip click handler is wired inside initWizard().
+// If anything in initWizard() throws BEFORE that line is reached, skip becomes
+// non-functional. This delegated handler runs once at script load and never depends
+// on initWizard() having succeeded. It catches any click on #wizSkip regardless of
+// how the element was rendered or whether the page-level wiring ran.
+(function setupBulletproofSkip() {
+  function tryClose() {
+    try {
+      const wizardEl = document.getElementById('wizard');
+      const appEl = document.getElementById('app');
+      if (wizardEl) wizardEl.style.display = 'none';
+      if (appEl) appEl.style.display = 'block';
+      document.body.classList.remove('wizard-open');
+      // Try the full close-out if available
+      if (typeof completeWizard === 'function') {
+        try { completeWizard(); } catch (e) { console.warn('[skip] completeWizard threw:', e); }
+      } else if (typeof initApp === 'function') {
+        try { initApp(); } catch (e) { console.warn('[skip] initApp threw:', e); }
+      }
+    } catch (err) {
+      console.error('[skip] critical error:', err);
+    }
+  }
+  // Handle clicks on the skip link (works for both <a> and <button>)
+  document.addEventListener('click', function(e) {
+    const tgt = e.target.closest && e.target.closest('#wizSkip');
+    if (tgt) {
+      e.preventDefault();
+      e.stopPropagation();
+      tryClose();
+    }
+  }, true); // capture phase so we run BEFORE per-element handlers (and don't depend on them)
+  // Also handle keyboard activation
+  document.addEventListener('keydown', function(e) {
+    if ((e.key === 'Enter' || e.key === ' ') && document.activeElement && document.activeElement.id === 'wizSkip') {
+      e.preventDefault();
+      tryClose();
+    }
+  }, true);
+})();
+
 initWizard();
 initAccessibility();
 initLanguages();

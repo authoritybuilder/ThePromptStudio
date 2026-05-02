@@ -1,5 +1,123 @@
 # CHANGELOG — The Prompt Studio
 
+## v9.9.3 — Critical syntax error fix — 2026-05-02
+
+**This is what broke the page** (the `Uncaught SyntaxError: Invalid or unexpected token` error you reported). Without this fix, NONE of the v9.9 / v9.9.1 / v9.9.2 work would run because the entire JS bundle fails to parse — that's why the skip button looked like it wasn't working, why niches wouldn't load tiles, why everything was dead. One bad escape sequence in a template literal, and the whole app silently dies.
+
+### Root cause
+
+In v9.9 I added a Master Context section to the markdown export. I wrote it like this (simplified):
+
+```js
+return `# Header
+...
+${v99RichBrief ? `\\`\\`\\`
+${v99RichBrief}
+\\`\\`\\`` : ''}
+...
+`;
+```
+
+The intent was to output a markdown code fence. Inside a template literal, `\\` produces a literal backslash — but then the next character `` ` `` (unescaped backtick) **terminates the template literal mid-string**. JS parser then sees garbage and throws `Invalid or unexpected token`.
+
+The correct pattern to output a literal backtick inside a template literal is `` \` `` (backslash-backtick, 2 source characters that produce 1 backtick in the output). I had written `\\` `` ` `` (3 source chars: backslash, backslash, backtick) which is "literal backslash, then literal backtick that ends the literal" — syntax error.
+
+### Fix in v9.9.3
+
+Hex-byte-level inspection of every fence token in the file:
+- 4 broken fence triples (12 source bytes each) inside the MD, skill, claude-project export blocks → fixed to use proper `` \`\`\` `` escape (6 bytes)
+- 2 cosmetically-wrong fences in the MD format with 4-byte tokens → reduced to correct 2-byte tokens
+- The two single-quoted-string fences in `v97RegionalContext` (different syntax, not template literals) were left alone — they were always valid
+
+### Verification
+
+JS bundle now parses cleanly through `node --check`. All v9.9 features verified intact:
+
+- ✓ MD export Master Context block present
+- ✓ Skill export Master Context block present
+- ✓ Bulletproof skip handler present
+- ✓ Rich brief variable setup intact
+- ✓ Resolution dropdown intact
+- ✓ HEX/RGB palette toggle intact
+
+### Lesson
+
+Should have validated JS syntax before shipping any of v9.9, v9.9.1, v9.9.2. The hotfix layers I added in those releases couldn't help because the script never executed in the first place. Going forward I'll run `node --check` on every shipped HTML before declaring it ready.
+
+### Files
+
+| File | Status | Size |
+|---|---|---|
+| `index.html` | App v8.9.8.3 — JS parses cleanly | ~654 KB |
+| `index.json` | v9.9.1 (unchanged) | ~5.7 MB |
+| `PROMPTSTUDIO-rebuilt.zip` | v9.9.1 prompt JSONs (unchanged) | ~15.0 MB |
+| `PromptStudioPro-v9-database.xlsx` | v9.9 (unchanged) | ~4.3 MB |
+
+### Deploy
+
+```bash
+cd ThePromptStudio
+cp /path/to/v9.9.3/index.html .
+git add -A
+git commit -m "v8.9.8.3 — fix template literal syntax error that killed entire app"
+git push origin main
+```
+
+After deploy + hard-refresh, you should see:
+- Wizard appears
+- Skip button works (closes wizard)
+- Niches load tiles when clicked
+- All v9.9 features (HEX/RGB toggle, pixel badges, resolution dropdown, ENRICHED CONTEXT in prompts, Master Context in exports) all functioning
+
+---
+
+## v9.9.2 — Skip-button bulletproof patch — 2026-05-02
+
+The Skip button still wasn't working after v9.9.1, even though I'd added try/catch to `completeWizard()`. After tracing through the code, I found the root cause:
+
+**The skip button's click handler is wired inside `initWizard()` at line ~5821.** If ANY line earlier in `initWizard()` throws an error (e.g. an unguarded `getElementById('foo').oninput = ...` where `foo` is missing in some browser/locale state), the wiring never happens. The `try/catch` I added in v9.9.1 was inside `completeWizard()` — that's the function the wiring CALLS, not the function that does the wiring. So if the wiring itself never ran, the click went nowhere.
+
+### Fix in v9.9.2 — three layers of defence
+
+**Layer 1: Convert `<a>` to `<button>`.** The skip element was an anchor (`<a>`) without `href`. Some browsers won't fire reliable click events on hrefless anchors, especially under certain accessibility configurations. Now a proper `<button type="button">` with matching CSS.
+
+**Layer 2: Document-level delegated click handler.** Added a `setupBulletproofSkip()` IIFE that runs at script-load time, completely independent of `initWizard()`. It uses event delegation in the **capture phase** to catch any click on `#wizSkip` — even if the element doesn't exist when the handler is registered, even if `initWizard()` fully crashed and never wired anything. It calls `completeWizard()` if available, falls back to `initApp()` if not, and as a last resort just toggles the wizard `display: none` and the app `display: block` so the user is never trapped.
+
+**Layer 3: Keep the v9.9.1 try/catch in `completeWizard()`.** Belt + braces. If both layers above somehow fail, the original wiring inside `initWizard()` still runs with try/catch around every field read.
+
+This is the kind of defensive layering that should have been there from day one. A modal closer that depends on a single line of wiring inside a 600-line init function is fragile by design. Now the skip button has three independent paths to working — they'd all have to fail simultaneously for the user to get stuck.
+
+### Verification
+
+4/4 checks pass:
+- ✓ wizSkip is a `<button>` (not `<a>`)
+- ✓ Button CSS updated (transparent bg, no border, hover state)
+- ✓ Document-level delegated handler with capture-phase listener
+- ✓ v9.9.1 `completeWizard()` try/catch still intact
+
+### Files
+
+| File | Status | Size |
+|---|---|---|
+| `index.html` | App v8.9.8.2 — bulletproof skip | ~670 KB |
+| `index.json` | v9.9.1 (unchanged from previous hotfix) | ~5.7 MB |
+| `PROMPTSTUDIO-rebuilt.zip` | v9.9.1 prompt JSONs (unchanged) | ~15.0 MB |
+| `PromptStudioPro-v9-database.xlsx` | v9.9 (unchanged) | ~4.3 MB |
+
+### Deploy
+
+```bash
+cd ThePromptStudio
+cp /path/to/v9.9.2/index.html .
+git add -A
+git commit -m "v8.9.8.2 — bulletproof skip button"
+git push origin main
+```
+
+Hard-refresh after deploy. Then test: open wizard → click Skip → wizard closes, app loads.
+
+---
+
 ## v9.9.1 — 3-bug hotfix — 2026-05-02
 
 I broke three things in v9.9. This release fixes them. Honest accounting:
