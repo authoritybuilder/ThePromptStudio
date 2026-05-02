@@ -1,5 +1,91 @@
 # CHANGELOG — The Prompt Studio
 
+## v9.9.13 — Restored magnetic name in green tile + clear description — 2026-05-02
+
+### What I broke in v9.9.12 and fixed in v9.9.13
+
+In v9.9.12 I removed the `<h3 class="tile-preview-title">` from the dark green preview box, thinking it was redundant with the body name. **It wasn't.** That preview-title was the BIG bold magnetic name in the green box that the user actually reads first. Removing it left the green box empty.
+
+### v9.9.13 fix
+
+Restored the green-box title AND made the layout cleaner:
+
+```
+┌────────────────────────────────────┐
+│  ▓▓▓▓ DARK GREEN PREVIEW BOX ▓▓▓▓  │
+│                                    │
+│   Booking Page Hero —              │ ← MAGNETIC NAME (col B)
+│   Builds Instant Trust             │   18px, bold, centered, gold
+│                                    │
+└────────────────────────────────────┘
+│  Sales · Booking                   │ ← TAGLINE italic (col C)
+│  The photo on your booking page    │ ← DESCRIPTION (col D summary)
+│  that makes prospects feel safe    │   13px, easy to read
+│  to schedule. Shot in an interview │
+│  -prep professional space...       │
+└────────────────────────────────────┘
+```
+
+Three distinct areas, each with one clear job:
+
+1. **Green box** — the magnetic Display Name (col B) — what they're creating in headline form
+2. **Italic tagline** — the Prompt Title (col C) — quick category context
+3. **Description** — the Summary (col D) — full explanation of what this asset does
+
+Also dropped the "What you get:" label from the description — the col D summary itself is descriptive ("The photo on your booking page that makes prospects feel safe to schedule"), so the label was redundant. Bumped description font from 12px to 13px and removed the border-top to make it cleaner.
+
+### Verification
+
+End-to-end render test confirms all 3 areas populated on every tile:
+
+```
+Tile 0:
+  GREEN BOX:    "Carousel Slide — Sequential Story for Instagram"
+  TAGLINE:      "Social · Carousel"
+  DESCRIPTION:  "The body slide template for Instagram or LinkedIn carousels..."
+  ✓ all 3 populated
+
+Tile 5:
+  GREEN BOX:    "Carousel Slide — Sequential Story · Warm Indoor for Instagram"
+  TAGLINE:      "Social · Carousel · Warm Indoor Light"
+  DESCRIPTION:  "The body slide template for Instagram or LinkedIn carousels..."
+  ✓ all 3 populated
+
+Result: 0 bugs across 6 tiles
+```
+
+### Still in v9.9.13 (carried from v9.9.12)
+
+- 4,437/4,437 magnetic outcome-driven names (100% coverage)
+- Every niche × every destination has prompts (TikTok 4% → 37%, Email 73% → 98%, etc.)
+- 0 within-niche duplicates, 0 globally
+- `applyDestinationFilter()` uses `scene.bestPlatforms` as primary signal
+- Nav state hard-resets on every version bump
+
+### Files (ship-ready)
+
+| File | Status | Size |
+|---|---|---|
+| `index.html` | V9.9.13 marker, green-box title restored | ~676 KB |
+| `index.json` | Magnetic + enriched destinations | ~6.0 MB |
+| `PROMPTSTUDIO-rebuilt.zip` | 4,437 prompt JSONs | ~15.2 MB |
+| `PromptStudioPro-v9-database.xlsx` | col B magnetic, col F enriched | ~4.4 MB |
+
+### Deploy
+
+```bash
+cd ThePromptStudio
+cp /path/to/v9.9.13/* .
+unzip -o PROMPTSTUDIO-rebuilt.zip
+git add -A
+git commit -m "v9.9.13 — restored green-box title + cleaner description"
+git push origin main
+```
+
+Hard-refresh in incognito. Verify via DevTools → Network → click `index.html` → search Response for `V9.9.13 deploy marker`.
+
+---
+
 ## v9.9.12 — Destination enrichment + verified rich tile rendering — 2026-05-02
 
 ### Two demands

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- V9.9.12 deploy marker - search for V9.9.6 in DevTools to confirm latest version -->
+<!-- V9.9.13 deploy marker - search for V9.9.6 in DevTools to confirm latest version -->
 <html lang="en-AU">
 <head>
 <meta charset="UTF-8">
@@ -301,7 +301,7 @@ body.pause-animations *, body.pause-animations *::before, body.pause-animations 
 .tile-aol-ribbon { position: absolute; top: 8px; left: 8px; z-index: 5; background: rgba(19,38,32,0.92); color: var(--accent); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 3px 8px; border-radius: 100px; }
 
 /* Tile summary line - V5 enhancement */
-.tile-summary { font-size: 12px; color: var(--text); line-height: 1.5; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+.tile-summary { font-size: 13px; color: var(--text); line-height: 1.5; margin-top: 8px; }
 .tile-summary strong { color: var(--accent-dark); font-weight: 600; }
 
 
@@ -7326,13 +7326,13 @@ function renderTilesList(wrap, scenes) {
             ${(scene.dimensions || scene.recommendedDimensions) ? `<span class="tile-px-badge" ${aspectStyleAttr} title="Native pixel resolution">${(scene.dimensions || scene.recommendedDimensions || '').replace(/\s*\(.*\)/, '').trim()}</span>` : ''}
             <button class="tile-save-btn ${isSaved ? 'saved' : ''}" data-save="${scene.id}" aria-label="${isSaved ? 'Saved' : 'Save'}" ${saveBtnStyleAttr}>${isSaved ? '★' : '☆'}</button>
           </div>
+          <h3 class="tile-preview-title">${displayName}</h3>
           ${archetypeLabel ? `<div class="tile-preview-archetype" ${archetypeHidden}>${archetypeLabel}</div>` : ''}
         </div>
       </div>
       <div class="tile-body" ${bodyStyleAttr}>
-        <h4 class="tile-name" ${nameStyleAttr}>${displayName}</h4>
         ${tagline ? `<div class="tile-tagline" ${taglineStyleAttr}>${tagline}</div>` : ''}
-        ${summary ? `<div class="tile-summary" ${summaryHidden}><strong>What you get:</strong> ${summary}</div>` : ''}
+        ${summary ? `<div class="tile-summary" ${summaryHidden}>${summary}</div>` : ''}
         ${pills ? `<div class="tile-bestfor" ${pillsHidden}>${pills}</div>` : ''}
       </div>
     `;
