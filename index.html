@@ -6034,33 +6034,50 @@ function renderSeasons() {
 }
 
 function completeWizard() {
-  state.name = document.getElementById('wizName').value;
-  state.business = document.getElementById('wizBusiness').value;
-  state.outfit = document.getElementById('wizOutfit').value;
-  state.visual = document.getElementById('wizVisual').value;
-  document.querySelectorAll('.colour-picker-input').forEach((input, i) => {
-    state.colors[i] = input.value;
-  });
-  document.getElementById('wizard').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+  // V99.1: Defensive — skip should NEVER fail. Wrap every field read so a missing
+  // element or new wizard step can't break the close-out flow.
+  try {
+    const nameEl = document.getElementById('wizName');
+    const bizEl = document.getElementById('wizBusiness');
+    const outfitWizEl = document.getElementById('wizOutfit');
+    const visualWizEl = document.getElementById('wizVisual');
+    if (nameEl) state.name = nameEl.value || '';
+    if (bizEl) state.business = bizEl.value || '';
+    if (outfitWizEl) state.outfit = outfitWizEl.value || '';
+    if (visualWizEl) state.visual = visualWizEl.value || '';
+    document.querySelectorAll('.colour-picker-input').forEach((input, i) => {
+      state.colors[i] = input.value;
+    });
+  } catch (err) {
+    console.warn('[wizard] field read error (continuing):', err);
+  }
+  // CRITICAL: these must run even if reads above failed
+  const wizardEl = document.getElementById('wizard');
+  const appEl = document.getElementById('app');
+  if (wizardEl) wizardEl.style.display = 'none';
+  if (appEl) appEl.style.display = 'block';
   // V8: Re-enable body scroll
   document.body.classList.remove('wizard-open');
-  document.querySelectorAll('.brand-bar .swatch').forEach((sw, i) => {
-    sw.style.background = state.colors[i];
-    const inp = sw.querySelector('input');
-    if (inp) inp.value = state.colors[i];
-  });
-  // V4.3: Brand bar uses select elements (outfitSelect/visualSelect), not text inputs
-  const outfitEl = document.getElementById('outfitSelect') || document.getElementById('outfit');
-  if (outfitEl && state.outfit) outfitEl.value = state.outfit;
-  const visualEl = document.getElementById('visualSelect') || document.getElementById('visual');
-  if (visualEl && state.visual) visualEl.value = state.visual;
+  try {
+    document.querySelectorAll('.brand-bar .swatch').forEach((sw, i) => {
+      sw.style.background = state.colors[i];
+      const inp = sw.querySelector('input');
+      if (inp) inp.value = state.colors[i];
+    });
+    // V4.3: Brand bar uses select elements (outfitSelect/visualSelect), not text inputs
+    const outfitEl = document.getElementById('outfitSelect') || document.getElementById('outfit');
+    if (outfitEl && state.outfit) outfitEl.value = state.outfit;
+    const visualEl = document.getElementById('visualSelect') || document.getElementById('visual');
+    if (visualEl && state.visual) visualEl.value = state.visual;
+  } catch (err) {
+    console.warn('[wizard] brand bar sync error (continuing):', err);
+  }
   // V4.2: Auto-recommend a category that matches wizard selections
-  setTimeout(() => { if (typeof v42AutoLoadRelevant === 'function') v42AutoLoadRelevant(); }, 300);
+  setTimeout(() => { try { if (typeof v42AutoLoadRelevant === 'function') v42AutoLoadRelevant(); } catch(e){} }, 300);
   // V4.5: Re-wire after wizard transitions to app
-  setTimeout(() => { if (typeof v44WireWizardExtras === 'function') v44WireWizardExtras(); }, 500);
+  setTimeout(() => { try { if (typeof v44WireWizardExtras === 'function') v44WireWizardExtras(); } catch(e){} }, 500);
   // V8.1: Auto-save the brand setup so it persists across sessions
-  if (typeof v81AutoSaveSession === 'function') v81AutoSaveSession();
+  try { if (typeof v81AutoSaveSession === 'function') v81AutoSaveSession(); } catch(e){}
   initApp();
 }
 
