@@ -4756,7 +4756,7 @@ function v9913SelfHealScene(s) {
   const baseScene = s.baseScene || s.base_scene || '';
   
   // Detect stale: name doesn't contain em-dash AND niche isn't already in name suffix style
-  const isStale = !name.includes('—') && !name.includes('--');
+  const isStale = !name.includes('—') && !name.includes('--') && !name.includes(': ');
   
   if (isStale && baseScene && niche) {
     // Try the magnetic map first
@@ -7393,7 +7393,7 @@ function renderTilesList(wrap, scenes) {
             <button class="tile-save-btn ${isSaved ? 'saved' : ''}" data-save="${scene.id}" aria-label="${isSaved ? 'Saved' : 'Save'}" ${saveBtnStyleAttr}>${isSaved ? '★' : '☆'}</button>
           </div>
           <h3 class="tile-preview-title">${displayName}</h3>
-          ${archetypeLabel ? `<div class="tile-preview-archetype" ${archetypeHidden}>${archetypeLabel}</div>` : ''}
+
         </div>
       </div>
       <div class="tile-body" ${bodyStyleAttr}>
