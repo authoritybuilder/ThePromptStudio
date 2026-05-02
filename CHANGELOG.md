@@ -1,5 +1,226 @@
 # CHANGELOG — The Prompt Studio
 
+## v9.9.15 — Description now shows on all viewports — 2026-05-02
+
+### What was hiding it
+
+Two CSS rules in the mobile media query (`@media (max-width: 900px)`) had:
+
+```css
+.tile-summary { display: none !important; }
+.tile .tile-summary, .tile .tile-bestfor, ... { display: none !important; }
+```
+
+Plus an inline-style fallback in the JS:
+
+```js
+const summaryHidden = isMobile ? `style="display:none;"` : '';
+```
+
+These were hiding the col D summary on any viewport ≤900px wide. The original intent was "What you get is too wordy for a tile on mobile" but the user explicitly wants the description visible.
+
+### Fixed in v9.9.15
+
+All three hide rules replaced with size-down-but-show rules:
+
+```css
+/* On mobile/tablet — show description, smaller font, 3-line truncation */
+.tile-summary {
+  font-size: 10px !important;
+  line-height: 1.3 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  margin-top: 3px !important;
+  color: #4a4540 !important;
+}
+```
+
+### Verified across desktop, tablet, mobile
+
+```
+DESKTOP (1280px):
+  GREEN: "Carousel Slide — Sequential Story for Instagram"
+  TAGLINE: "Social · Carousel"
+  DESCRIPTION: "The body slide template for Instagram or LinkedIn carousels..." (181 chars)
+  ✓ all 3 areas present
+
+TABLET (820px):
+  GREEN: "Carousel Slide — Sequential Story for Instagram"
+  TAGLINE: "Social · Carousel"
+  DESCRIPTION: "The body slide template for Instagram or LinkedIn carousels..." (181 chars)
+  ✓ all 3 areas present
+
+MOBILE (420px):
+  GREEN: "Carousel Slide — Sequential Story for Instagram"
+  TAGLINE: "Social · Carousel"
+  DESCRIPTION: "The body slide template for Instagram or LinkedIn carousels..." (181 chars)
+  ✓ all 3 areas present
+
+Total bugs: 0
+```
+
+### Tile structure (locked in)
+
+```
+┌─────────────────────────────────────┐
+│   ▓▓ DARK GREEN PREVIEW BOX ▓▓      │
+│                                     │
+│   Carousel Slide —                  │ ← MAGNETIC NAME (col B)
+│   Sequential Story                  │
+│                                     │
+└─────────────────────────────────────┘
+│ Social · Carousel                   │ ← italic tagline (col C)
+│ The body slide template for         │ ← description (col D) — NOW VISIBLE
+│ Instagram or LinkedIn carousels.    │   on all viewports
+│ Designed for Instagram's grid...    │
+└─────────────────────────────────────┘
+```
+
+### Files (ship-ready)
+
+| File | Status |
+|---|---|
+| `index.html` | V9.9.15 marker, summary visible on all viewports |
+| `index.json` | unchanged from v9.9.13 (already correct) |
+| `PROMPTSTUDIO-rebuilt.zip` | unchanged from v9.9.13 |
+| `PromptStudioPro-v9-database.xlsx` | unchanged from v9.9.13 |
+
+### Deploy
+
+```bash
+cd ThePromptStudio
+cp /path/to/v9.9.15/index.html .
+git add -A
+git commit -m "v9.9.15 — description now shows on all viewports"
+git push origin main
+```
+
+(Only `index.html` changed in v9.9.15 — the data files from v9.9.13 are still correct, no need to redeploy them unless you haven't already.)
+
+Hard-refresh in incognito. Verify via DevTools → Network → click `index.html` → search Response for `V9.9.15 deploy marker`.
+
+---
+
+## v9.9.14 — Self-healing data + cache-busting + verified tile rendering — 2026-05-02
+
+### What was happening
+
+User screenshot showed tiles with:
+- **Empty green box** (no title)
+- Bold body name "Carousel Mid-Slide" (the OLD non-magnetic format)
+- Italic tagline "Carousel Mid-Slide for Instagram." (the BAD fallback `${name} for ${niche}.`)
+- **Empty description**
+
+Those names don't exist in v9.9.13's data files. v9.9.13's instagram-001 has `name: "Scroll-Stopper — Pattern Disruption for Instagram"`. The user was seeing CACHED data from a deploy from v9.9.10 or earlier.
+
+### Three fixes shipped
+
+**Fix 1: Cache-busting on `fetchIndex`.** The index.json fetch now appends `?v=v9914&t=<timestamp>` to the URL and uses `cache: 'no-cache'`. This forces the browser to actually re-download the file instead of using the cached old version.
+
+```js
+const cacheBust = '?v=' + (window.PROMPT_STUDIO_VERSION || 'v9913') + '&t=' + Date.now();
+const r = await fetch(url + cacheBust, { cache: 'no-cache' });
+```
+
+**Fix 2: Eliminated the "name for niche." bad-fallback tagline.** Was line 5031:
+```js
+// BEFORE (bad):
+scene.tagline = taglineMap[archetypeFromCat] || `${scene.name} for ${(cat && cat.label) || catKey}.`;
+```
+This was producing strings like "Carousel Mid-Slide for Instagram." (the exact text the user saw). 
+
+```js
+// AFTER (good):
+const assetType = scene.asset || scene.assetCategory || scene.baseScene || 'Brand Asset';
+scene.tagline = String(assetType).replace(/^Stock\//, '').replace(/\//g, ' · ');
+```
+
+Now the tagline uses the asset category like "Social · Carousel" — meaningful context, never "X for Y."
+
+**Fix 3: Eliminated empty description fallback.** Was: scene.sub stayed empty if the JSON didn't have it. Now:
+```js
+if (!scene.sub || scene.sub.length < 30) {
+  scene.sub = `The ${baseScene.toLowerCase()} image for ${niche.toLowerCase()}. Designed to capture attention and drive your specific business outcome.`;
+}
+```
+A scene without a sub field now gets a sensible auto-generated description instead of nothing.
+
+**Fix 4: Self-healing scene normaliser.** New function `v9913SelfHealScene(s)` runs at index-load time AND at fetchScene time. If a scene has a non-magnetic name (no em-dash), it rewrites the name from `baseScene + niche` using a built-in MAGNETIC map of 30+ common scene types. So even on a stale data deploy, tiles will self-heal to magnetic format.
+
+### Verified with real v9.9.14 data
+
+```
+Tile 0:
+  GREEN: "Carousel Slide — Sequential Story for Instagram"
+  TAGLINE: "Social · Carousel"
+  DESC: "The body slide template for Instagram or LinkedIn carousels. Designed for..."  ✓
+
+Tile 1:
+  GREEN: "Carousel Slide — Sequential Story · Golden Hour for Instagram"
+  TAGLINE: "Social · Carousel · Warm Sunset Light"
+  DESC: "The body slide template for Instagram or LinkedIn carousels. Designed for..."  ✓
+
+Tile 5:
+  GREEN: "Carousel Slide — Sequential Story · Warm Indoor for Instagram"
+  TAGLINE: "Social · Carousel · Warm Indoor Light"
+  DESC: "The body slide template for Instagram or LinkedIn carousels. Designed for..."  ✓
+
+0 bugs / 6 tiles
+```
+
+### Tile structure (locked in)
+
+```
+┌─────────────────────────────────────┐
+│   ▓▓ DARK GREEN PREVIEW BOX ▓▓      │
+│                                     │
+│   Carousel Slide —                  │ ← MAGNETIC NAME (col B)
+│   Sequential Story                  │   18px gold, bold, centered
+│                                     │
+└─────────────────────────────────────┘
+│ Social · Carousel                   │ ← italic tagline (col C)
+│ The body slide template for         │ ← description (col D)
+│ Instagram or LinkedIn carousels.    │   13px, easy to read
+│ Designed for Instagram's...         │
+└─────────────────────────────────────┘
+```
+
+### Files (ship-ready)
+
+| File | Status |
+|---|---|
+| `index.html` | V9.9.14 marker, self-heal + cache-bust + bad-fallback eliminated |
+| `index.json` | 4,437 magnetic + enriched scenes |
+| `PROMPTSTUDIO-rebuilt.zip` | 4,437 prompt JSONs with magnetic names |
+| `PromptStudioPro-v9-database.xlsx` | col B magnetic, col F enriched |
+
+### Deploy
+
+```bash
+cd ThePromptStudio
+cp /path/to/v9.9.14/* .
+unzip -o PROMPTSTUDIO-rebuilt.zip
+git add -A
+git commit -m "v9.9.14 — self-heal + cache-bust + eliminated bad fallback"
+git push origin main
+```
+
+**To verify the deploy worked:**
+1. Open the site in **incognito** mode (so no cache from previous visits)
+2. Open DevTools → **Console**
+3. You should see: `[PromptStudio] Loaded 4437 scenes for search (data version: v9.9.12)`
+4. If you see "STALE DATA" in the console, the file deploy didn't propagate
+5. Network tab → click `index.json` → URL should have `?v=v9913&t=...` cache-buster
+
+If you still see "Carousel Mid-Slide" with the bad tagline:
+1. The deploy hasn't gone through. Check git push completed.
+2. GitHub Pages can take 1-2 minutes to update after push.
+3. Try `Ctrl+Shift+Delete` → "Cached images and files" → Clear → reload.
+
+---
+
 ## v9.9.13 — Restored magnetic name in green tile + clear description — 2026-05-02
 
 ### What I broke in v9.9.12 and fixed in v9.9.13

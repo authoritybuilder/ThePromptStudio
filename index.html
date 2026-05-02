@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- V9.9.13 deploy marker - search for V9.9.6 in DevTools to confirm latest version -->
+<!-- V9.9.15 deploy marker - search for V9.9.6 in DevTools to confirm latest version -->
 <html lang="en-AU">
 <head>
 <meta charset="UTF-8">
@@ -733,8 +733,8 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
   .tile-body { padding: 6px 7px 7px !important; background: white !important; }
   .tile-name { font-size: 11px !important; -webkit-line-clamp: 2 !important; color: #0f5132 !important; line-height: 1.18 !important; margin-bottom: 2px !important; font-weight: 600; }
   .tile-tagline { font-size: 9px !important; -webkit-line-clamp: 1 !important; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; color: #8b6f47 !important; margin-bottom: 0 !important; line-height: 1.25 !important; }
-  /* "What you get" is too wordy for a tile - hide on mobile */
-  .tile-summary { display: none !important; }
+  /* V9.9.15: Show description on mobile too — user wants the col D summary always visible */
+  .tile-summary { font-size: 10px !important; line-height: 1.3 !important; display: -webkit-box !important; -webkit-line-clamp: 3 !important; -webkit-box-orient: vertical !important; overflow: hidden !important; margin-top: 3px !important; color: #4a4540 !important; padding-top: 0 !important; border-top: none !important; }
   .tile-visual-desc { display: none !important; }
   /* Best-for pills hidden on mobile - too dense */
   .tile-bestfor { display: none !important; }
@@ -1125,7 +1125,8 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
   .tile .tile-body { padding: 6px 7px 7px !important; }
   .tile .tile-name { font-size: 11px !important; line-height: 1.18 !important; }
   .tile .tile-tagline { font-size: 9px !important; line-height: 1.25 !important; -webkit-line-clamp: 1 !important; }
-  .tile .tile-summary,
+  /* V9.9.15: Show summary on mobile but truncate */
+  .tile .tile-summary { font-size: 10px !important; line-height: 1.3 !important; display: -webkit-box !important; -webkit-line-clamp: 3 !important; -webkit-box-orient: vertical !important; overflow: hidden !important; margin-top: 3px !important; color: #4a4540 !important; padding-top: 0 !important; border-top: none !important; }
   .tile .tile-bestfor,
   .tile .tile-bestfor-pill,
   .tile .tile-visual-desc { display: none !important; }
@@ -4710,20 +4711,113 @@ function deriveMetadata(catKey, cat) {
   return cat;
 }
 
+// V9.9.13 SELF-HEAL: Rewrite scene fields if data appears stale.
+// Detects: non-magnetic name (no em-dash), missing tagline, or missing/short sub.
+// Rebuilds magnetic name from baseScene + niche, fills tagline + sub with reasonable defaults.
+const V9913_MAGNETIC_MAP = {
+  'Discovery Call': 'Booking Page Hero — Builds Instant Trust',
+  'Strategy Session': 'Strategy Session Image — Sells Premium Packages',
+  'Group Coaching': 'Cohort Photo — Makes People Want In',
+  'Workshop Delivery': 'Workshop in Action — Drives Sign-ups',
+  '1:1 Session': 'Intimate 1:1 Image — Premium Service Sell',
+  'Client Breakthrough': 'Breakthrough Moment — Powers Case Studies',
+  'Toolkit Reveal': 'Toolkit Hero — Magnetises Lead Magnets',
+  'Programme Welcome': 'Welcome Hero — Onboards New Clients Warmly',
+  'Signature Method': 'Signature Method Image — Owns Your IP',
+  'Office Hours': 'Office Hours — Opens Community Doors',
+  'Online Session': 'Online Coaching — Builds Remote Credibility',
+  'Live Event': 'Stage Hero — Establishes Speaker Authority',
+  'Retreat Day': 'Retreat Hero — Sells High-Ticket Experiences',
+  'Client Testimonial': 'Testimonial Backdrop — Builds Social Proof',
+  'Resource Library': 'Resource Hero — Anchors Member Hub',
+  'Hook Frame': 'Hook Frame — Stops the Scroll Cold',
+  'Pattern Break': 'Pattern Break — Disrupts the Feed',
+  'CTA Card': 'CTA Card — Drives the Click',
+  'Cover Thumbnail': 'Cover Thumbnail — Earns the Play',
+  'Cover Story': 'Cover Story Hero — Magazine-Grade Impact',
+  'Feature Spread': 'Feature Spread — Premium Editorial Anchor',
+  'Hero Campaign': 'Hero Campaign — One-Image Sell',
+  'Hero Product Shot': 'Hero Product Shot — Catalogue Headliner',
+  'Carousel Slide': 'Carousel Slide — Sequential Story',
+  'Carousel Cover': 'Carousel Cover — Opens the Swipe',
+  'Carousel Closer': 'Carousel Closer — Drives Final Action',
+  'Carousel Mid-Slide': 'Carousel Mid-Slide — Holds the Swipe',
+  'Quote Card': 'Quote Card — Save-and-Share Asset',
+  'BTS Frame': 'BTS Frame — Builds Authentic Connection',
+  'Whitepaper Cover': 'Whitepaper Cover — Establishes Expert Authority',
+  'Boardroom Brief': 'Boardroom Hero — C-Suite Credibility',
+  'Methodology Diagram': 'Methodology Image — Showcases Your IP',
+};
+
+function v9913SelfHealScene(s) {
+  if (!s || typeof s !== 'object') return s;
+  const name = s.name || '';
+  const niche = s.catLabel || '';
+  const baseScene = s.baseScene || s.base_scene || '';
+  
+  // Detect stale: name doesn't contain em-dash AND niche isn't already in name suffix style
+  const isStale = !name.includes('—') && !name.includes('--');
+  
+  if (isStale && baseScene && niche) {
+    // Try the magnetic map first
+    const magnetic = V9913_MAGNETIC_MAP[baseScene];
+    if (magnetic) {
+      s.name = `${magnetic} for ${niche}`;
+    } else if (baseScene) {
+      // Fallback: use base scene as-is with niche
+      s.name = `${baseScene} — Brand Hero for ${niche}`;
+    }
+  }
+  
+  // Heal tagline: if it equals "name for niche" pattern (the bad fallback), rebuild from asset/businessMoment
+  if (!s.tagline || s.tagline === `${name} for ${niche}` || s.tagline === `${name} for ${niche}.`) {
+    const assetType = s.asset || s.assetCategory || baseScene || 'Brand Asset';
+    s.tagline = String(assetType).replace(/^Stock\//, '').replace(/\//g, ' · ');
+  }
+  
+  // Heal sub: if missing/empty, build a sensible description
+  if (!s.sub || s.sub.length < 30) {
+    if (baseScene && niche) {
+      s.sub = `The ${baseScene.toLowerCase()} image for ${niche.toLowerCase()}. Designed to capture attention and drive your specific business outcome.`;
+    } else {
+      s.sub = `Brand-aligned visual asset designed for your specific use case and audience.`;
+    }
+  }
+  
+  return s;
+}
+
 async function fetchIndex() {
-  const urls = ['./index.json', `https://raw.githubusercontent.com/${GITHUB.user}/${GITHUB.repo}/${GITHUB.branch}/index.json`];
+  // V9.9.13: Cache-bust the index.json fetch with a version query so old data never sticks.
+  // Also log the loaded version so the console shows what's actually being used.
+  const cacheBust = '?v=' + (window.PROMPT_STUDIO_VERSION || 'v9913') + '&t=' + Date.now();
+  const urls = ['./index.json' + cacheBust, `https://raw.githubusercontent.com/${GITHUB.user}/${GITHUB.repo}/${GITHUB.branch}/index.json` + cacheBust];
   for (const url of urls) {
     try {
-      const r = await fetch(url, { cache: 'default' });
+      const r = await fetch(url, { cache: 'no-cache' });
       if (!r.ok) continue;
       const data = await r.json();
       const cats = data.categories || (typeof data === 'object' && Object.keys(data).length > 5 ? data : null);
       if (cats && Object.keys(cats).length > 5) {
         Object.entries(cats).forEach(([key, cat]) => deriveMetadata(key, cat));
-        // V4.0: Capture embedded search index
         if (data.scenes) {
           state.searchIndex = Object.values(data.scenes);
-          console.log('[PromptStudio] Loaded', state.searchIndex.length, 'scenes for search');
+          // V9.9.13 SELF-HEAL: If data is stale (no magnetic em-dash format), rewrite names + taglines + subs at runtime
+          // This protects users on cached/stale deploys from seeing broken tiles.
+          state.searchIndex = state.searchIndex.map(s => v9913SelfHealScene(s));
+          // Also update the data.scenes object so fetchScene() lookups get healed data too
+          if (data.scenes) {
+            Object.keys(data.scenes).forEach(k => {
+              data.scenes[k] = v9913SelfHealScene(data.scenes[k]);
+            });
+          }
+          const dataVersion = data.version || 'unknown';
+          console.log('[PromptStudio] Loaded', state.searchIndex.length, 'scenes for search (data version:', dataVersion + ')');
+          // V9.9.13: Detect stale data — if version is older than v9.9.11, the magnetic names won't be present
+          window.__loadedDataVersion = dataVersion;
+          if (dataVersion !== 'v9.9.13' && dataVersion !== 'v9.9.12' && dataVersion !== 'v9.9.11') {
+            console.warn('[PromptStudio] STALE DATA: index.json version is', dataVersion, '— magnetic names may be missing. Hard-refresh required.');
+          }
         }
         return cats;
       }
@@ -4904,46 +4998,55 @@ async function fetchScene(catKey, sceneId) {
     };
   }
 
-  // Self-heal: if name looks like an ID (e.g. "Skool Module Tile 1" or "Change Management Consultants 002"),
-  // override with a derived evocative name
+  // V9.9.13/14: SELF-HEAL FIRST (before isOldFormat check) — this rewrites stale names
+  // with proper magnetic format from baseScene + niche. We do this BEFORE the legacy
+  // deriveSceneName fallback so we get magnetic names instead of positional category buckets.
+  if (!scene.catLabel) scene.catLabel = (cat && cat.label) || catKey.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  if (!scene.baseScene && scene.base_scene) scene.baseScene = scene.base_scene;
+  scene = v9913SelfHealScene(scene);
+  
+  // Self-heal: if name STILL looks bad (e.g. "Skool Module Tile 1"), fall back to deriveSceneName
   const isOldFormat = !scene.name ||
     /\d+$/.test(scene.name) ||  // ends in digits
     scene.name === sceneId ||
     /^[A-Z][a-z]+\s+\d+$/.test(scene.name) ||
     scene.name.toLowerCase().includes('asset ') ||
     scene.name.toLowerCase().includes('tile ') ||
-    /^\w+\s+\w+\s+(coaches|consultants|creators)\s*-/i.test(scene.name); // "Career Coaches - Discovery Call"
+    /^\w+\s+\w+\s+(coaches|consultants|creators)\s*-/i.test(scene.name);
 
   if (isOldFormat) {
     scene.name = deriveSceneName(catKey, sceneId, sceneIdx);
   }
   
+  // V9.9.13 SELF-HEAL: Ensure scene has magnetic name + good tagline + rich sub.
+  // This catches cases where per-prompt JSON is missing these fields (stale deploys).
+  if (!scene.catLabel) scene.catLabel = (cat && cat.label) || catKey.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  if (!scene.baseScene && scene.base_scene) scene.baseScene = scene.base_scene;
+  scene = v9913SelfHealScene(scene);
+  
   // V4.0: ALWAYS ensure magnetic display fields exist (whether real or fallback)
   if (!scene.magneticName) scene.magneticName = scene.name;
   if (!scene.displayName) scene.displayName = scene.name;
   if (!scene.tagline) {
-    const archetypeFromCat = (cat && cat.archetype) || '';
-    const taglineMap = {
-      'Sage': 'Wisdom you can see.',
-      'Sovereign': 'Authority captured in a frame.',
-      'Creator': 'Craft made visible.',
-      'Hero': 'The moment before action.',
-      'Caregiver': 'Presence that holds space.',
-      'Magician': 'Transformation made visible.',
-      'Lover': 'Connection in a single frame.',
-      'Jester': 'Joy that earns attention.',
-      'Outlaw': 'A different way, captured.',
-      'Innocent': 'Clarity made visible.',
-      'Explorer': 'Possibility, framed.',
-      'Everyman': 'Trust, captured.'
-    };
-    scene.tagline = taglineMap[archetypeFromCat] || `${scene.name} for ${(cat && cat.label) || catKey}.`;
+    // V9.9.13: Better fallback — use asset category, not "name for niche"
+    const assetType = scene.asset || scene.assetCategory || scene.baseScene || 'Brand Asset';
+    scene.tagline = String(assetType).replace(/^Stock\//, '').replace(/\//g, ' · ');
+  }
+  if (!scene.sub || scene.sub.length < 30) {
+    // V9.9.13: Build a proper description, NOT "name for niche"
+    const baseScene = scene.baseScene || scene.base_scene || '';
+    const niche = scene.catLabel || catKey;
+    if (baseScene) {
+      scene.sub = `The ${baseScene.toLowerCase()} image for ${niche.toLowerCase()}. Designed to capture attention and drive your specific business outcome.`;
+    } else {
+      scene.sub = `Brand-aligned visual asset designed for your specific use case and audience.`;
+    }
   }
   if (!scene.subDescription) scene.subDescription = scene.tagline;
   if (!scene.visualDescription) {
     const aspect = (scene.v3 && scene.v3.aspect) || '16:9';
     const lighting = (scene.v3 && scene.v3.lighting_variant) || 'editorial';
-    scene.visualDescription = `${scene.name} for ${(cat && cat.label) || catKey}: ${aspect} composition with ${lighting.toLowerCase()} lighting.`;
+    scene.visualDescription = `${scene.name}: ${aspect} composition with ${lighting.toLowerCase()} lighting.`;
   }
 
   // Self-heal: if whatYouGet is generic filler, replace with specific
@@ -7314,7 +7417,7 @@ function renderTilesList(wrap, scenes) {
     const bodyStyleAttr = isMobile ? `style="padding:${isPhone ? '4px 5px 5px' : '6px 7px 7px'};"` : '';
     const nameStyleAttr = isMobile ? `style="font-size:${isPhone ? '10px' : '11px'};line-height:1.18;margin-bottom:2px;"` : '';
     const taglineStyleAttr = isMobile ? `style="font-size:${isPhone ? '8px' : '9px'};line-height:1.25;-webkit-line-clamp:1;margin-bottom:0;"` : '';
-    const summaryHidden = isMobile ? `style="display:none;"` : '';
+    const summaryHidden = isMobile ? `style="font-size:${isPhone ? '9px' : '10px'};line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-top:3px;"` : '';
     const pillsHidden = isMobile ? `style="display:none;"` : '';
 
     tile.innerHTML = `
