@@ -447,6 +447,16 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
 
 /* V97: Tile-level filter chip bar */
 .tile-filter-bar { display: flex; align-items: center; gap: 14px; padding: 10px 12px; background: rgba(197,168,128,0.04); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+/* V98.1: Collapsible filter shell */
+.tile-filter-shell { margin-bottom: 8px; }
+.tile-filter-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; background: rgba(197,168,128,0.08); border: 1px solid var(--border); border-radius: 100px; font-size: 11px; font-weight: 600; color: var(--accent-dark); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.tile-filter-toggle:hover { background: rgba(197,168,128,0.16); }
+.tile-filter-toggle.active { background: var(--primary); color: var(--accent); border-color: var(--primary); }
+.tile-filter-toggle-icon { display: inline-block; transition: transform 0.18s ease; font-size: 9px; }
+.tile-filter-toggle.expanded .tile-filter-toggle-icon { transform: rotate(180deg); }
+.tile-filter-toggle-count { display: inline-block; min-width: 14px; padding: 1px 6px; font-size: 10px; font-weight: 700; background: rgba(197,168,128,0.25); color: var(--accent-dark); border-radius: 100px; }
+.tile-filter-toggle-count:empty { display: none; }
+.tile-filter-toggle.active .tile-filter-toggle-count { background: rgba(197,168,128,0.45); color: var(--accent); }
 .tile-filter-group { display: flex; align-items: center; gap: 6px; }
 .tile-filter-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent-dark); letter-spacing: 0.06em; }
 .tile-filter-chips { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -2052,21 +2062,28 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
       <!-- V7: Destination size recommendations panel -->
       <div class="dest-sizes-panel" id="destSizesPanel" style="display:none;"></div>
 
-      <!-- V97: Tile-level filter chips (Aspect / Background / Render) -->
-      <div class="tile-filter-bar" id="tileFilterBar">
-        <div class="tile-filter-group">
-          <span class="tile-filter-label">Aspect:</span>
-          <div class="tile-filter-chips" id="tileFilterAspect"></div>
+      <!-- V97 + V98.1: Tile-level filter chips - collapsible to free home page space -->
+      <div class="tile-filter-shell" id="tileFilterShell">
+        <button type="button" class="tile-filter-toggle" id="tileFilterToggle" aria-expanded="false">
+          <span class="tile-filter-toggle-icon">▾</span>
+          <span class="tile-filter-toggle-label">Filters</span>
+          <span class="tile-filter-toggle-count" id="tileFilterToggleCount"></span>
+        </button>
+        <div class="tile-filter-bar" id="tileFilterBar" style="display:none;">
+          <div class="tile-filter-group">
+            <span class="tile-filter-label">Aspect:</span>
+            <div class="tile-filter-chips" id="tileFilterAspect"></div>
+          </div>
+          <div class="tile-filter-group">
+            <span class="tile-filter-label">Background:</span>
+            <div class="tile-filter-chips" id="tileFilterBg"></div>
+          </div>
+          <div class="tile-filter-group">
+            <span class="tile-filter-label">Render:</span>
+            <div class="tile-filter-chips" id="tileFilterRender"></div>
+          </div>
+          <button type="button" class="tile-filter-clear" id="tileFilterClear" title="Clear all filters">Clear</button>
         </div>
-        <div class="tile-filter-group">
-          <span class="tile-filter-label">Background:</span>
-          <div class="tile-filter-chips" id="tileFilterBg"></div>
-        </div>
-        <div class="tile-filter-group">
-          <span class="tile-filter-label">Render:</span>
-          <div class="tile-filter-chips" id="tileFilterRender"></div>
-        </div>
-        <button type="button" class="tile-filter-clear" id="tileFilterClear" title="Clear all filters">Clear</button>
       </div>
 
       <div class="tile-grid" id="tiles"></div>
@@ -3459,6 +3476,11 @@ function v3GetEnhancedPrompt(scene, platformKey) {
   // 5. Per-prompt custom text
   if (window._modalCustomText && window._modalCustomText.trim()) {
     p += ` SPECIFIC TEXT TO INCLUDE IN IMAGE: "${window._modalCustomText.trim()}" - render this exact text as a clearly legible overlay using the Header Font Style, positioned in a safe zone with high contrast against the background.`;
+  }
+
+  // V98.1: User design requests (mood, props, framing, references the user wants added)
+  if (window._modalDesignRequests && window._modalDesignRequests.trim()) {
+    p += ` ADDITIONAL DESIGN REQUESTS: ${window._modalDesignRequests.trim()} - incorporate these creative requests into the scene while maintaining all brand and quality requirements above.`;
   }
 
   // V7: Per-prompt design notes (user-supplied authoritative direction)
@@ -6294,6 +6316,25 @@ function renderChannelTypes() {
 function renderTileFilters() {
   if (!state.tileFilters) state.tileFilters = { aspect: 'All', background: 'All', render: 'All' };
 
+  // V98.1: Wire the collapsible toggle (idempotent — safe to call on every render)
+  const toggleBtn = document.getElementById('tileFilterToggle');
+  const filterBar = document.getElementById('tileFilterBar');
+  if (toggleBtn && filterBar && !toggleBtn._wired) {
+    toggleBtn.addEventListener('click', () => {
+      const isOpen = filterBar.style.display !== 'none';
+      filterBar.style.display = isOpen ? 'none' : 'flex';
+      toggleBtn.classList.toggle('expanded', !isOpen);
+      toggleBtn.setAttribute('aria-expanded', !isOpen);
+    });
+    toggleBtn._wired = true;
+  }
+  // Update active-filter count badge
+  const tf = state.tileFilters;
+  const activeCount = (tf.aspect !== 'All' ? 1 : 0) + (tf.background !== 'All' ? 1 : 0) + (tf.render !== 'All' ? 1 : 0);
+  const countEl = document.getElementById('tileFilterToggleCount');
+  if (countEl) countEl.textContent = activeCount > 0 ? String(activeCount) : '';
+  if (toggleBtn) toggleBtn.classList.toggle('active', activeCount > 0);
+
   // V97.1: Compute what's actually present in the currently-visible scenes so chips reflect reality
   // Walk the search index (scenes) to count each dimension's values.
   const visibleScenes = (state.searchIndex || []).filter(s => {
@@ -7099,11 +7140,14 @@ function renderTilesList(wrap, scenes) {
     const v = scene.v3 || {};
     const archetypeLabel = (v.archetype || '').split('(')[0].trim();
     const isSaved = v3IsSaved(scene.id);
-    const displayName = v8FriendlyName(scene.magneticName || scene.name || scene.id);
+    // V98.1: Tile mapping per user request:
+    //   - Tile name = "Prompt Title" from spreadsheet (now stored as scene.name = Display Name)
+    //   - Tagline = scene.tagline if present, else short hint
+    //   - "What you get:" = scene.sub (= Summary column from spreadsheet) — falls back to legacy builder
+    const displayName = v8FriendlyName(scene.name || scene.magneticName || scene.id);
     const tagline = v8FriendlyName(scene.tagline || scene.subDescription || '');
-    // V5: Use the new magnetic summary builder for a richer "what this gives you" line
     const cat = state.lib[scene.category || scene.cat] || {};
-    const summary = v8FriendlyName(v5BuildMagneticSummary(scene, cat));
+    const summary = v8FriendlyName(scene.sub || v5BuildMagneticSummary(scene, cat));
     const aol = cat.aol || '';
     const bestFor = detectBestFor(scene);
     const pills = bestFor.length ? bestFor.map(p => `<span class="tile-bestfor-pill">${bestForLabel(p)}</span>`).join('') : '';
@@ -7173,6 +7217,7 @@ function renderTilesList(wrap, scenes) {
 function showSceneDetails(scene) {
   // V4.4: Reset per-modal state
   window._modalCustomText = '';
+  window._modalDesignRequests = '';  // V98.1: clear design requests on modal open
   window._modalIncludeDisclaimer = (state.aiDisclaimer === 'yes' || state.aiDisclaimer === 'always');
   // V7: Reset design notes state per modal
   window._modalDesignNotes = '';
@@ -7301,6 +7346,12 @@ function showSceneDetails(scene) {
         </div>
         
         <div class="prompt-customise-row">
+          <label class="prompt-customise-field-label" for="promptDesignRequests">Do you have any other design requests?</label>
+          <textarea id="promptDesignRequests" class="prompt-customise-textarea" placeholder="e.g. 'Add a soft glow around the subject' or 'Make it feel more cinematic' or 'Include a copy of my book on the desk'" rows="2"></textarea>
+          <div class="prompt-customise-hint">Anything else you want in the image? Mood, props, framing, colour shifts, references — we add it to the prompt.</div>
+        </div>
+        
+        <div class="prompt-customise-row">
           <label class="prompt-customise-field-label">AI Disclaimer at bottom of image</label>
           <div class="prompt-customise-toggle-row">
             <button type="button" class="customise-toggle-btn ${state.aiDisclaimer === 'yes' ? 'active' : ''}" data-disclaimer="yes">Yes, add disclaimer</button>
@@ -7401,6 +7452,16 @@ function showSceneDetails(scene) {
     customTextInput.oninput = (e) => {
       window._modalCustomText = e.target.value;
       updatePromptDisplay(currentPlatform);  // Re-render with new text
+    };
+  }
+
+  // V98.1: Design requests input — appended to the prompt as additional creative direction
+  const designReqInput = modal.querySelector('#promptDesignRequests');
+  if (designReqInput) {
+    designReqInput.value = window._modalDesignRequests || '';
+    designReqInput.oninput = (e) => {
+      window._modalDesignRequests = e.target.value;
+      updatePromptDisplay(currentPlatform);
     };
   }
   

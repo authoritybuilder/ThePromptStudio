@@ -1,163 +1,131 @@
 # CHANGELOG — The Prompt Studio
 
-## v9.8 — 11-item targeted patch — 2026-05-02
+## v9.8.1 — 6-item screenshot brief — 2026-05-02
 
-Eleven specific items from your direct feedback. All eleven verified to pass.
+Note: items 1, 3, and 6 from this brief were ALREADY shipped in v9.8 — your screenshots show the deployed older version (still on "3,231 prompts" and chip-grid modal). Make sure to deploy v9.8.1 (or v9.8) to see them. Items 2, 4, 5 are new fixes in v9.8.1.
 
-### 1. Prompt count display
+### 1. Niches sidebar scrollbar — already shipped in v9.8
 
-The library was showing "3,231" or "3,000+" in 12 places (header subtitle, search placeholder, sidebar count, comments). All updated to **4,437** to match the actual database. The display now matches reality.
+The Niches list section now uses `max-height: 50vh; overflow-y: auto` with a custom 6px scrollbar styled in the brand accent. All 151 niches reachable without scrolling the whole page. **You are seeing this issue because you're viewing the deployed older version.** Push v9.8.1 to fix.
 
-### 2. Niches sidebar scroll bar
+### 2. Tile text from spreadsheet — fixed properly in v9.8.1
 
-The Niches section in the left nav previously expanded with `flex: 1; max-height: none` so on tall screens or when collapsing other sections, the niche list could push past the viewport bottom and become unreachable. Now: `max-height: 50vh; overflow-y: auto` with a custom scroll thumb in the brand accent colour. Users always see all 151 niches without scrolling the whole page.
+The tile renderer was reading `scene.magneticName` first and falling back to `scene.name`. With the v9.8 friendly-name migration, `scene.name` IS the friendly Display Name from the spreadsheet, so the priority was wrong.
 
-### 3. Nail Salons niche
+Also, "What you get:" was using `v5BuildMagneticSummary()` which synthesised filler text. The user wants it to read directly from the spreadsheet's Summary column.
 
-Added 18 new prompts under a new **Nail Salons** niche (Channel Type: Profession, Industry: Beauty Services):
+Fixed in v9.8.1:
+- Tile name = `scene.name` (which is the Prompt Title / Display Name from spreadsheet)
+- Tagline = `scene.tagline` (newly added — first sentence of the Scenario column)
+- "What you get:" = `scene.sub` (which is the Summary column from spreadsheet)
+- Falls back to legacy synth only if spreadsheet field is empty
 
-- 8 stock-style: Hero Image, About Page, Blog Header, Social Background, Lifestyle Shot, Product Mockup, Workspace, Celebration
-- 10 niche-specific: Service Showcase, Before & After, Nail Art Detail, Color Trend Post, Booking CTA, Client Testimonial, Tools and Tech, Bridal Service, Seasonal Promo, Studio Tour
+`index.json` regenerated with `tagline` field on all 4,437 scenes. Sample output:
 
-Each prompt has all 10 platform exports (Claude, ChatGPT, MJ, Flux, Imagen, Firefly, Leonardo, SDXL, Ideogram, Sora). Palette: dusty pink + warm dark + champagne + white. Default archetype blend: Creator / Lover / Caregiver. Min Claude prompt length: 897 chars.
+```
+name:    "First Call Booking Page Hero for Academic Coaches"
+tagline: "Subject mid-discovery-call at desk, leaning slightly forward..."
+sub:     "The photo on your booking page that makes prospects feel safe..."
+```
 
-### 4. YouTube reclassified
+### 3. Prompt count — already shipped in v9.8
 
-YouTube was incorrectly tagged as **Industry** for 70 rows (50 with "Youtube", 20 with "Youtubers"). It's a **platform**, not an industry. Reclassified all 70 rows: Industry now reads "Creator Economy" (234 rows total now in this industry). YouTube remains correctly available as a Channel Type = Platform niche for browsing.
+15 occurrences of "4,437", 0 of "3,231". You're seeing 3,231 because you're viewing the older deployed version.
 
-### 5. Cross-filter empty state
+### 4. Filter bar relocated — collapsible in v9.8.1
 
-Selecting Breakthrough Coaches + Twitter/X returned **0 prompts** because the original Best Platforms strings were too narrow (typically just "website, linkedin"). Most visual prompts work fine on Twitter, Pinterest, Facebook, Instagram, etc. — the data was over-restrictive.
+The Aspect / Background / Render filter bar that took up significant vertical space at the top of the home page is now **collapsed by default**. Replaced with a single compact "▾ Filters" toggle button (~120px wide, fits inline above the tile grid).
 
-Now Best Platforms is expanded by aspect ratio and asset type. For each prompt:
-- Aspect 1:1 / 4:5 → adds Instagram, Pinterest, Facebook
-- Aspect 9:16 → adds Instagram, TikTok, YouTube, Pinterest
-- Aspect 16:9 / 16:5 / wide → adds LinkedIn, Twitter/X, Facebook, Website
-- Visual asset categories → adds Twitter/X, Pinterest broadly
-- All prompts → website
+- Click to expand/collapse
+- An active-filter count badge appears on the toggle when filters are applied (e.g. "▾ Filters [2]")
+- The toggle goes accent-coloured when filters are active, so users know they have filters on even when collapsed
+- All chip behaviour and live count badges from v9.7.1 still work — just hidden behind the toggle until needed
 
-Result: Breakthrough Coaches × Twitter/X went from 0 → 25 prompts. Same fix applied across every (profession × platform) combination.
+The home page now reads: destination chips → tile filter toggle → tile grid. Saves roughly 120-180px of vertical space at the top of every category view on desktop, much more on mobile.
 
-Platform-niche prompts (Channel Type=Platform) keep their tight platform binding so they don't bleed into other platforms.
+### 5. Design requests field — added in v9.8.1
 
-### 6. Em dashes removed
+New textarea in the modal's "Customise this prompt" section, directly below "Specific text or words to include":
 
-374 em dashes (`—`) removed across the entire HTML and replaced with spaced hyphens (` - `). Cleans up button labels, hints, subtitles, and inline copy.
-
-### 7. Palette hex codes on home page
-
-The four brand-bar palette swatches now show the hex code below each swatch in 9px monospace. The labels update live when:
-- The user clicks a swatch and changes the colour (color picker `oninput`)
-- The user picks a season palette in the wizard
-- The wizard syncs colours to the brand bar
-
-CSS adds 18px of bottom padding to the palette section to fit the labels.
-
-### 8. Friendly prompt titles in HTML
-
-Bug found: Display Name and Prompt Title were swapped — the **academic** title ("Quote-Card Pull Visual") was in `Display Name`, and the **friendly** version ("Pull Quote Visual for Bloggers") was in `Prompt Title`. The HTML reads the `name` field from `index.json`, which was being populated from the academic version.
-
-Fix: Both columns now hold the friendly version. The `name` field in `index.json` is now always something like:
-- "First Call Booking Page Hero for Academic Coaches"
-- "Strategy Session Sales Page Hero for Academic Coaches"
-- "Group Programme Sales Image for Academic Coaches"
-
-Sample of 20 scene names: 20/20 follow the "X for Niche" pattern. Zero academic remnants.
-
-### 9. Readability score 9
-
-Simplified eleven high-traffic UI strings to roughly grade 9 reading level. Examples:
-
-| Before | After |
-|---|---|
-| Personalise your elite prompt library in 60 seconds | Set up your prompts in 60 seconds |
-| How you want to be addressed throughout the experience. | How should I call you? |
-| The name your audience knows you by. We use this in your prompt templates. | Your business name. We add this to your prompts. |
-| This tunes the language and positioning in your prompts. | This shapes the words and tone in your prompts. |
-| Where the subject sits - change the visual feel | Where the subject sits. Pick the look you want. |
-| Random gives a brand-cohesive palette · Remix shifts hues while keeping the vibe | Random gives a balanced palette. Remix changes the colours but keeps the feel. |
-
-### 10. Gender field on wizard
-
-New field card 3a between Business Type and Country, with polite framing:
-
-> **How should images of you be rendered?**
-> _This helps the AI draw you well. We never share or save this._
+> **Do you have any other design requests?**
+> _Anything else you want in the image? Mood, props, framing, colour shifts, references — we add it to the prompt._
 >
-> Dropdown options: Prefer not to say (use neutral defaults) / Woman / Man / Non-binary or genderfluid / Other - I will describe it myself
+> placeholder: "e.g. 'Add a soft glow around the subject' or 'Make it feel more cinematic' or 'Include a copy of my book on the desk'"
 
-Picking "Other" reveals a free-text field. The chosen value flows into the prompt's `GENDER PRESENTATION:` line via `v5BuildBrandOverride()` and `getIdentityCapsule()`. Maps `woman → female-presenting`, `man → male-presenting`, `non-binary → non-binary, gender-neutral presentation`, `custom → user-supplied text`.
+The value gets stored in `window._modalDesignRequests` and threaded into the augmented prompt as:
 
-### 11. Background and Render Style as dropdowns
+> ADDITIONAL DESIGN REQUESTS: {user text} - incorporate these creative requests into the scene while maintaining all brand and quality requirements above.
 
-Modal previously used chip grids: Background was 15 chips, Render Style was 29 chips in 7 family rows. They took up significant vertical space, pushing the prompt text below the fold.
+Resets to empty when a new modal opens. Re-renders the prompt display live as you type (so users can see their request appear in the prompt text immediately).
 
-Now both are compact `<select>` dropdowns:
-- Background: single dropdown with all 15 options as `Icon Name - Description` (truncated to 60 chars)
-- Render Style: single dropdown with `<optgroup>` per family ("📸 Photoreal", "🧸 3D / CGI", "🌸 Anime / Manga", etc.)
+### 6. BG/Render dropdowns — already shipped in v9.8
 
-Wiring: `bgSelect.addEventListener('change')` and `renderSelect.addEventListener('change')` update `scene.v94_background` / `scene.v94_render` and call the regenerate callback. Preset apply also updates both dropdowns. The chip-related CSS rules and click handlers were removed.
+Both `<select>` elements present, no `v94-bg-chip` or `v94-render-chip` remnants. The screenshot shows the chip grid because you're viewing the older deployed version.
 
 ### Files
 
 | File | Status | Size |
 |---|---|---|
-| `index.html` | App v8.9.6 (all 11 items implemented) | 633 KB |
-| `index.json` | v9.8 catalogue (4,437 scenes, friendly names) | 3.4 MB |
-| `PROMPTSTUDIO-rebuilt.zip` | All 4,437 prompt JSONs | 14.5 MB |
-| `PromptStudioPro-v9-database.xlsx` | v9.8 — 24 sheets, 4,437 × 45 cols | 4.0 MB |
+| `index.html` | App v8.9.7 — 6-item screenshot brief | ~635 KB |
+| `index.json` | v9.8.1 catalogue (4,437 scenes, with tagline field) | ~3.8 MB |
+| `PROMPTSTUDIO-rebuilt.zip` | v9.8 prompt JSONs (unchanged) | 14.5 MB |
+| `PromptStudioPro-v9-database.xlsx` | v9.8 (unchanged) | 4.0 MB |
 
-### Verification
+### Deploy — important note
 
-All 11 items independently verified to pass via automated audit:
-
-1. ✓ Prompt count "4,437" in 15 places, no "3,231" remnants
-2. ✓ Niches sidebar `max-height: 50vh; overflow-y: auto`
-3. ✓ Nail Salons: 18 prompts in DB, 18 in index.json
-4. ✓ YouTube/Youtubers: 0 in Industry column, 234 rows now Creator Economy
-5. ✓ Breakthrough Coaches × Twitter: 25 prompts (was 0)
-6. ✓ Em dashes: 0 in HTML (was 374)
-7. ✓ Palette hex labels: CSS class, markup, and sync handler all present
-8. ✓ Friendly names: 20/20 sample scenes follow "X for Niche" pattern
-9. ✓ Readability: simplified subtitle and field hints present
-10. ✓ Gender field: select element, state wiring, flows to prompts
-11. ✓ Dropdowns: BG `<select>`, Render `<select>` with optgroups, onchange wired, no chip remnants
-
-### Deploy
+Your screenshots show that the live site at `authoritybuilder.github.io/ThePromptStudio` is running an older build. To see all 6 items addressed, deploy this v9.8.1 build:
 
 ```bash
 cd ThePromptStudio
-cp /path/to/v9.8/* .
+cp /path/to/v9.8.1/index.html .
+cp /path/to/v9.8.1/index.json .
+cp /path/to/v9.8.1/PROMPTSTUDIO-rebuilt.zip .
+cp /path/to/v9.8.1/PromptStudioPro-v9-database.xlsx .
+cp /path/to/v9.8.1/CHANGELOG.md .
+cp /path/to/v9.8.1/README.md .
 unzip -o PROMPTSTUDIO-rebuilt.zip
 git add -A
-git commit -m "v8.9.6 + v9.8 — 11-item brief patch"
+git commit -m "v8.9.7 + v9.8.1 — 6-item screenshot brief"
 git push origin main
 ```
 
-Hard-refresh after deploy.
+Then **hard-refresh** your browser:
+- **Laptop:** Cmd+Shift+R (Mac) or Ctrl+Shift+F5 (PC)
+- **iPhone:** Settings → Safari → Clear History and Website Data, then revisit
+
+If you still see "3,231" or chip grids after a hard-refresh, check `https://github.com/authoritybuilder/ThePromptStudio/actions` for any failed Pages deployment.
+
+### Verification (all 6 items)
+
+- ✓ NICHES SCROLL — `max-height: 50vh` + `overflow-y: auto` in CSS
+- ✓ TILE TEXT — name=scene.name, tagline=scene.tagline, summary=scene.sub
+- ✓ PROMPT COUNT — 15 instances of "4,437", 0 of "3,231"
+- ✓ FILTER BAR — collapsed by default with active-count badge
+- ✓ DESIGN REQUESTS — field, state var, prompt threading all wired
+- ✓ DROPDOWNS — `<select id="v94BgSelect">` and `<select id="v94RenderSelect">` present, no chip remnants
 
 ---
 
+## v9.8 — 11-item brief — 2026-05-02
+
+Prompt count update (3,231 → 4,437). Niches sidebar scroll. Nail Salons niche (18 prompts). YouTube reclassified to Creator Economy. Cross-filter inclusivity (Best Platforms expanded). Em dashes removed (374). Palette hex codes on home page. Friendly tile titles. Readability simplified. Gender field on wizard. BG/Render as dropdowns.
+
 ## v9.7.2 — 2026-05-02
 
-New repo (ThePromptStudio), business type as dropdown, photo upload speedup.
+New repo (ThePromptStudio), business type as dropdown, fast photo upload.
 
-## v9.7.1 — Final debug pass — 2026-05-02
+## v9.7.1 — 2026-05-02
 
-Tile filter chips made data-driven with count badges. Regional context added to all 8 export formats. JSON export got the rendered prompt and archetype blend.
+Tile filter chips data-driven with count badges. Regional context in all 8 export formats.
 
 ## v9.7 — 2026-05-02
 
-Unified render style taxonomy (29 styles in 7 families). Tile-level filter chips. Export pipeline traced and 2 silent-customisation-drop bugs fixed.
+Unified render style taxonomy. Tile-level filter chips. Export pipeline fixes.
 
 ## v9.6 — 2026-05-02
 
-Authority Builder Pack (1,024 new prompts). Channel Type column. Hex/RGB color input. Tighter modal padding. Saved presets.
-
-## v9.5 — 2026-05-02
-
-22 niche template fixes. Real photo analysis. 15-region geo-context.
+Authority Builder Pack (1,024 prompts). Channel Type column. Hex/RGB color input. Saved presets.
 
 ## Earlier
 
-v9.4, v9.3, v9.2, v9.1, v9.0 — see prior changelogs.
+v9.5, v9.4, v9.3, v9.2, v9.1, v9.0 — see prior changelogs.
