@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- V9.9.11 deploy marker - search for V9.9.6 in DevTools to confirm latest version -->
+<!-- V9.9.12 deploy marker - search for V9.9.6 in DevTools to confirm latest version -->
 <html lang="en-AU">
 <head>
 <meta charset="UTF-8">
@@ -7326,14 +7326,13 @@ function renderTilesList(wrap, scenes) {
             ${(scene.dimensions || scene.recommendedDimensions) ? `<span class="tile-px-badge" ${aspectStyleAttr} title="Native pixel resolution">${(scene.dimensions || scene.recommendedDimensions || '').replace(/\s*\(.*\)/, '').trim()}</span>` : ''}
             <button class="tile-save-btn ${isSaved ? 'saved' : ''}" data-save="${scene.id}" aria-label="${isSaved ? 'Saved' : 'Save'}" ${saveBtnStyleAttr}>${isSaved ? '★' : '☆'}</button>
           </div>
-          <h3 class="tile-preview-title" ${previewTitleHidden}>${displayName}</h3>
           ${archetypeLabel ? `<div class="tile-preview-archetype" ${archetypeHidden}>${archetypeLabel}</div>` : ''}
         </div>
       </div>
       <div class="tile-body" ${bodyStyleAttr}>
         <h4 class="tile-name" ${nameStyleAttr}>${displayName}</h4>
-        <div class="tile-tagline" ${taglineStyleAttr}>${tagline}</div>
-        <div class="tile-summary" ${summaryHidden}><strong>What you get:</strong> ${summary}</div>
+        ${tagline ? `<div class="tile-tagline" ${taglineStyleAttr}>${tagline}</div>` : ''}
+        ${summary ? `<div class="tile-summary" ${summaryHidden}><strong>What you get:</strong> ${summary}</div>` : ''}
         ${pills ? `<div class="tile-bestfor" ${pillsHidden}>${pills}</div>` : ''}
       </div>
     `;

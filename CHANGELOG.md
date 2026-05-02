@@ -1,5 +1,100 @@
 # CHANGELOG — The Prompt Studio
 
+## v9.9.12 — Ship-ready: 100% magnetic name coverage + clean tile rendering — 2026-05-02
+
+### What was wrong
+
+User screenshot showed two problems:
+
+**1. Tiles had a duplicate name (preview heading + body heading)** and **a blank "What you get:" label** with no content. The preview area showed the prompt name, then the body showed the same name again, then "What you get:" with nothing under it.
+
+**2. Names like "Thumb-Stopping Feed Hero" and "Whitepaper Cover Hero"** were appearing — these don't exist in v9.9.11's data files. They come from a hardcoded `SCENE_NAME_MAP` at line 4740 that the `deriveSceneName()` function uses as a fallback when `isOldFormat` triggers in `fetchScene`. None of v9.9.11's magnetic names trigger `isOldFormat`, so the user must be on a stale cached deploy of an older version.
+
+### Two fixes shipped
+
+**Fix 1: Tile renderer cleanup.** Removed the duplicate `<h3 class="tile-preview-title">` in the dark preview area. The body `<h4 class="tile-name">` already shows the name prominently — duplicating it in the preview was waste. Also added conditional rendering for tagline and summary divs:
+
+```js
+${tagline ? `<div class="tile-tagline">${tagline}</div>` : ''}
+${summary ? `<div class="tile-summary"><strong>What you get:</strong> ${summary}</div>` : ''}
+```
+
+If a slim scene has no `sub` field, the "What you get:" section is now hidden entirely instead of showing an empty label.
+
+**Fix 2: 100% magnetic name coverage.** v9.9.11 covered 79% of prompts via my magnetic templates dictionary, leaving 446 prompts (165 unique scene types) falling back to a generic "X — Brand Hero" pattern. v9.9.12 extends the dictionary to 325+ named templates covering EVERY base scene in the database — including:
+
+- Long-video specifics (Episode Thumbnail, Channel Trailer, Tutorial Cover, Documentary Frame, End Screen Card)
+- Pinterest natives (Idea Pin Cover, Standard Pin, Tutorial Pin, Mood Board, Seasonal Pin)
+- Course platform internals (Course Catalog Hero, Module Roadmap, Drip Lesson Unlock, Certificate Design)
+- Membership platform widgets (Activity Feed Image, Group Avatar, Network Footer, Daily Prompt)
+- Sales funnel mid-pages (Cart Open Banner, Checkout Page Hero, Upsell Offer Hero, Refund Guarantee Badge)
+- Editorial-creator natives (Featured Story, Digest Cover, Subscribe CTA, Sponsorship Slot)
+- Many more
+
+Result: **4,437/4,437 prompts now have magnetic outcome-driven names.** 0 within-niche duplicates. 0 globally duplicates.
+
+### Sample magnetic names
+
+```
+"Booking Page Hero — Builds Instant Trust for Career Coaches"
+"Cohort Photo — Makes People Want In for Career Coaches"  
+"Hook Frame — Stops the Scroll Cold for Tiktok"
+"Cover Story Hero — Magazine-Grade Impact for Bloggers"
+"Whitepaper Cover — Establishes Expert Authority for AI Consultants"
+"Boardroom Hero — C-Suite Credibility for AI Consultants"
+"Idea Pin Cover — Discovery Hook for Pinterest"
+"Episode Thumbnail — Click-Worthy Cover for YouTubers"
+"Tutorial Cover — Learning Click-Driver for YouTubers"
+"Cart Open Banner — Limited Window for E-commerce"
+"Mission Image — Brand Values Anchor for Coaches"
+"Achievement Moment — Win Reveal for Course Creators"
+```
+
+### Verification
+
+End-to-end jsdom render test:
+
+```
+=== AI Consultants tile rendering ===
+Tile 0:
+  Body name: "Boardroom Hero — C-Suite Credibility for AI Consultants"
+  Tagline:   "Enterprise"
+  Summary:   "What you get: The C-suite-grade image for high-stakes proposals..."
+  Preview-title duplicate: no ✓
+
+Tile 1:
+  Body name: "Executive Workshop — Premium Leadership Image for AI Consultants"
+  Tagline:   "Enterprise · Workshop · C-suite premium positioning."
+  Summary:   "What you get: The leadership-development image..."
+  Preview-title duplicate: no ✓
+
+Bugs detected: 0
+```
+
+### Files (ship-ready)
+
+| File | Status | Size |
+|---|---|---|
+| `index.html` | Tile renderer cleaned + V9.9.12 marker | ~676 KB |
+| `index.json` | 4,437 fully-magnetic scenes | ~6.0 MB |
+| `PROMPTSTUDIO-rebuilt.zip` | 4,437 prompt JSONs with magnetic names | ~15.2 MB |
+| `PromptStudioPro-v9-database.xlsx` | Workbook col B = magnetic names | ~4.4 MB |
+
+### Deploy
+
+```bash
+cd ThePromptStudio
+cp /path/to/v9.9.12/* .
+unzip -o PROMPTSTUDIO-rebuilt.zip
+git add -A
+git commit -m "v9.9.12 — full magnetic name coverage + tile cleanup, ship-ready"
+git push origin main
+```
+
+**Important:** Hard-refresh in incognito after deploy. Verify via DevTools → Network → click `index.html` → search Response for `V9.9.12 deploy marker`. If you find that string, you have v9.9.12. If you see "Thumb-Stopping" anywhere, you're still on the stale cached version.
+
+---
+
 ## v9.9.11 — Magnetic outcome-driven Display Names — 2026-05-02
 
 ### What changed
