@@ -220,7 +220,12 @@ body.pause-animations *, body.pause-animations *::before, body.pause-animations 
 .brand-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent-dark); margin-right: 4px; letter-spacing: 0.1em; }
 .swatch { width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s; position: relative; }
 /* V98: Show the hex code under each swatch in the brand bar */
-.swatch-hex { position: absolute; top: 26px; left: 50%; transform: translateX(-50%); font-size: 9px; font-family: 'Courier New', monospace; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; pointer-events: none; letter-spacing: 0.02em; }
+.swatch-hex { position: absolute; top: 26px; left: 50%; transform: translateX(-50%); font-size: 9px; font-family: 'Courier New', monospace; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; pointer-events: none; letter-spacing: 0.02em; display: none; }
+.brand-section.palette-show-hex .swatch-hex { display: inline-block; }
+/* V99: HEX/RGB toggle button next to the palette label */
+.palette-format-toggle { display: inline-flex; gap: 2px; margin-left: 6px; vertical-align: middle; }
+.palette-format-btn { font-size: 9px; padding: 1px 6px; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text-muted); cursor: pointer; font-family: 'Courier New', monospace; font-weight: 700; }
+.palette-format-btn.active { background: var(--primary); color: var(--accent); border-color: var(--primary); }
 .brand-section-content { padding-bottom: 18px; }
 .swatch:hover { transform: scale(1.1); }
 .swatch input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
@@ -530,6 +535,7 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
 .tile-preview-overlay { position: absolute; inset: 0; padding: 12px; display: flex; flex-direction: column; }
 .tile-preview-meta { display: flex; justify-content: space-between; align-items: flex-start; }
 .tile-aspect-badge { background: rgba(197,168,128,0.95); color: var(--primary); font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 100px; letter-spacing: 0.03em; }
+.tile-px-badge { background: rgba(15,81,50,0.85); color: var(--accent); font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 100px; letter-spacing: 0.03em; margin-left: 4px; font-family: 'Courier New', monospace; }
 .tile-save-btn { background: rgba(255,255,255,0.22); color: white; border: 1px solid rgba(255,255,255,0.35); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; padding: 0; }
 .tile-save-btn:hover, .tile-save-btn.saved { background: var(--accent); color: var(--primary); border-color: var(--accent); }
 .tile-preview-title { color: var(--accent); font-family: var(--font-display); font-size: 18px; font-weight: 700; line-height: 1.15; text-align: center; margin: auto 0 8px 0; padding: 8px 10px; flex: 1; display: flex; align-items: center; justify-content: center; text-shadow: 0 2px 8px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.7); }
@@ -1568,9 +1574,14 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
         <button class="gender-btn" data-gender="non-binary">⚧ Non-binary</button>
       </div>
     </div>
-    <div class="brand-section brand-section-collapsible" data-section="palette">
+    <div class="brand-section brand-section-collapsible" data-section="palette" id="paletteSection">
       <button class="brand-section-toggle" data-toggles="palette">
         <span class="brand-label" data-i18n="bar.palette">Palette</span>
+        <span class="palette-format-toggle">
+          <button type="button" class="palette-format-btn active" data-pf="off" title="Hide values">·</button>
+          <button type="button" class="palette-format-btn" data-pf="hex" title="Show hex codes">HEX</button>
+          <button type="button" class="palette-format-btn" data-pf="rgb" title="Show RGB values">RGB</button>
+        </span>
         <span class="brand-section-arrow">▾</span>
       </button>
       <div class="brand-section-content" id="paletteContent">
@@ -3029,11 +3040,24 @@ function v94AugmentPrompt(originalPrompt, scene) {
   const renderKey = v97MigrateRenderKey(scene.v94_render);  // V97: translate old taxonomy
   const platformKey = scene.v94_platform;
   
-  // Only augment if the user has explicitly chosen something
-  if (!bgKey && !renderKey && !platformKey) return originalPrompt;
-  
   const additions = [];
   
+  // V99 (item 7+8): Inject the rich master context + prompt psychology IF
+  // we have it loaded for this scene. This dramatically enriches the prompt
+  // by feeding all relevant master columns: Industry Context, Cinematic
+  // Scenario, Lighting Spec, Wardrobe, Framing, Safe Zones, Pose, Design
+  // Principle, Conversion Intent, Archetype Blend, Recipe.
+  // We pull from the per-prompt JSON cache (loaded on modal open) rather
+  // than the index.json so the home page stays fast.
+  const cached = (window._modalLoadedPrompt && window._modalLoadedPrompt.id === scene.id)
+    ? window._modalLoadedPrompt : null;
+  if (cached && cached.richBrief && cached.richBrief.trim().length > 200) {
+    additions.push('=== ENRICHED CONTEXT (from prompt master) ===');
+    additions.push(cached.richBrief);
+    additions.push('=== END ENRICHED CONTEXT ===');
+    additions.push('Apply ALL of the above context. The Design Principle and Conversion Intent are AUTHORITATIVE - they describe the psychological response the image must trigger in the viewer. Bring the Cinematic Scenario, Lighting Specification, Wardrobe, Framing, and Pose Direction together with surgical precision.');
+  }
+
   if (bgKey) {
     const bg = V94_BACKGROUND_STYLES[bgKey];
     if (bg) {
@@ -3065,6 +3089,11 @@ function v94AugmentPrompt(originalPrompt, scene) {
     if (spec) {
       additions.push(`OUTPUT FORMAT: ${spec.width}×${spec.height} pixels (${spec.aspect}). For ${spec.platform} ${spec.asset_type}. ${spec.safe_zone}`);
     }
+  }
+  
+  // V99: Modal-level state.size override (from the resolution dropdown)
+  if (state && state.size && state.size !== 'auto' && typeof SIZE_LABEL !== 'undefined' && SIZE_LABEL[state.size]) {
+    additions.push(`USER RESOLUTION OVERRIDE: ${SIZE_LABEL[state.size]} - render at this exact pixel resolution and aspect ratio, overriding any prior dimension guidance.`);
   }
   
   if (additions.length === 0) return originalPrompt;
@@ -7042,11 +7071,18 @@ const DESTINATION_SIZES = {
   ]
 };
 
-// V7: Render the suggested-sizes panel below the destination bar.
-// Tapping a size auto-applies it to state.size + the brand bar size dropdown.
+// V7: Suggested-sizes panel - DISABLED in v9.9 per user request
+// (was causing visual clutter; users can pick sizes from the brand bar instead)
 function v7RenderDestSizesPanel() {
   const panel = document.getElementById('destSizesPanel');
-  if (!panel) return;
+  if (panel) {
+    panel.style.display = 'none';
+    panel.innerHTML = '';
+  }
+  return;
+  // Original code disabled below
+  // eslint-disable-next-line
+  if (false) {
   const dest = state.destinationFilter || 'all';
   if (dest === 'all') {
     panel.style.display = 'none';
@@ -7091,6 +7127,7 @@ function v7RenderDestSizesPanel() {
   });
   // V7: Translate any data-i18n inside the panel
   if (typeof v7TranslateNewContent === 'function') v7TranslateNewContent(panel);
+  } // end if (false)
 }
 
 function renderTilesList(wrap, scenes) {
@@ -7176,7 +7213,8 @@ function renderTilesList(wrap, scenes) {
         ${aol ? `<span class="tile-aol-ribbon" ${ribbonStyleAttr}>${aol}</span>` : ''}
         <div class="tile-preview-overlay" ${overlayStyleAttr}>
           <div class="tile-preview-meta">
-            <span class="tile-aspect-badge" ${aspectStyleAttr}>${v.aspect || ''}</span>
+            <span class="tile-aspect-badge" ${aspectStyleAttr}>${v.aspect || scene.aspect || ''}</span>
+            ${(scene.dimensions || scene.recommendedDimensions) ? `<span class="tile-px-badge" ${aspectStyleAttr} title="Native pixel resolution">${(scene.dimensions || scene.recommendedDimensions || '').replace(/\s*\(.*\)/, '').trim()}</span>` : ''}
             <button class="tile-save-btn ${isSaved ? 'saved' : ''}" data-save="${scene.id}" aria-label="${isSaved ? 'Saved' : 'Save'}" ${saveBtnStyleAttr}>${isSaved ? '★' : '☆'}</button>
           </div>
           <h3 class="tile-preview-title" ${previewTitleHidden}>${displayName}</h3>
@@ -7191,12 +7229,29 @@ function renderTilesList(wrap, scenes) {
       </div>
     `;
 
-    tile.onclick = (e) => {
+    tile.onclick = async (e) => {
       if (e.target.closest('.tile-save-btn')) return;
-      showSceneDetails(scene);
+      // V99: Fetch the full prompt JSON (with richBrief) before opening the modal
+      // so v94AugmentPrompt can thread the rich master context into the prompt.
+      try {
+        const fullScene = await fetchScene(scene.cat || scene.category, scene.id);
+        // Merge: keep tile's known fields, layer in the rich data
+        showSceneDetails(Object.assign({}, scene, fullScene || {}));
+      } catch (err) {
+        // Fallback to slim scene if fetch fails
+        showSceneDetails(scene);
+      }
     };
-    tile.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showSceneDetails(scene); }
+    tile.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        try {
+          const fullScene = await fetchScene(scene.cat || scene.category, scene.id);
+          showSceneDetails(Object.assign({}, scene, fullScene || {}));
+        } catch (err) {
+          showSceneDetails(scene);
+        }
+      }
     });
 
     const saveBtn = tile.querySelector('.tile-save-btn');
@@ -7222,6 +7277,9 @@ function showSceneDetails(scene) {
   // V7: Reset design notes state per modal
   window._modalDesignNotes = '';
   window._modalDesignNotesEnabled = false;
+  // V99: Cache the loaded prompt's full JSON (with richBrief) so v94AugmentPrompt
+  // can thread the rich master context into the prompt.
+  window._modalLoadedPrompt = scene && scene.richBrief ? scene : null;
   
   const v = scene.v3 || { aspect: '', dimensions: '', business_moment: scene.bestFor, intent: scene.whatYouGet, archetype: '', platforms: { claude: scene.template } };
 
@@ -7328,8 +7386,48 @@ function showSceneDetails(scene) {
           </div>
           <div class="output-banner-divider"></div>
           <div class="output-banner-spec">
-            <div class="output-banner-label">You will generate at</div>
-            <div class="output-banner-size">${v.dimensions || 'auto'} <span class="output-banner-aspect">${v.aspect ? '· ' + v.aspect : ''}</span></div>
+            <div class="output-banner-label">Change your resolution</div>
+            <select class="output-banner-select" id="modalSizeSelect" style="background-image:none;padding-right:32px;">
+              <option value="auto" ${(state.size==='auto'||!state.size) ? 'selected':''}>${v.dimensions || 'Native'} ${v.aspect ? '· ' + v.aspect : ''} (use prompt default)</option>
+              <optgroup label="Instagram">
+                <option value="instagram-square" ${state.size==='instagram-square'?'selected':''}>Instagram square 1080x1080</option>
+                <option value="instagram-portrait" ${state.size==='instagram-portrait'?'selected':''}>Instagram portrait 1080x1350</option>
+                <option value="instagram-story" ${state.size==='instagram-story'?'selected':''}>Instagram story / reel 1080x1920</option>
+                <option value="instagram-landscape" ${state.size==='instagram-landscape'?'selected':''}>Instagram landscape 1080x566</option>
+              </optgroup>
+              <optgroup label="LinkedIn">
+                <option value="li-post" ${state.size==='li-post'?'selected':''}>LinkedIn post 1200x1200</option>
+                <option value="li-banner" ${state.size==='li-banner'?'selected':''}>LinkedIn banner 1584x396</option>
+                <option value="li-article" ${state.size==='li-article'?'selected':''}>LinkedIn article 1200x627</option>
+                <option value="li-document" ${state.size==='li-document'?'selected':''}>LinkedIn document 1080x1080</option>
+              </optgroup>
+              <optgroup label="Facebook">
+                <option value="fb-post" ${state.size==='fb-post'?'selected':''}>Facebook post 1200x630</option>
+                <option value="fb-cover" ${state.size==='fb-cover'?'selected':''}>Facebook cover 1640x924</option>
+                <option value="fb-story" ${state.size==='fb-story'?'selected':''}>Facebook story 1080x1920</option>
+              </optgroup>
+              <optgroup label="TikTok / YouTube / Pinterest">
+                <option value="tiktok-video" ${state.size==='tiktok-video'?'selected':''}>TikTok video 1080x1920</option>
+                <option value="youtube-thumbnail" ${state.size==='youtube-thumbnail'?'selected':''}>YouTube thumbnail 1280x720</option>
+                <option value="youtube-shorts" ${state.size==='youtube-shorts'?'selected':''}>YouTube Shorts 1080x1920</option>
+                <option value="pinterest-pin" ${state.size==='pinterest-pin'?'selected':''}>Pinterest standard pin 1000x1500</option>
+                <option value="pinterest-idea" ${state.size==='pinterest-idea'?'selected':''}>Pinterest idea pin 1080x1920</option>
+              </optgroup>
+              <optgroup label="Twitter / X">
+                <option value="twitter-post" ${state.size==='twitter-post'?'selected':''}>Twitter/X post 1600x900</option>
+                <option value="twitter-header" ${state.size==='twitter-header'?'selected':''}>Twitter/X header 1500x500</option>
+              </optgroup>
+              <optgroup label="Website / Blog">
+                <option value="web-hero" ${state.size==='web-hero'?'selected':''}>Web hero 1920x1080</option>
+                <option value="blog-cover" ${state.size==='blog-cover'?'selected':''}>Blog cover 1200x630</option>
+              </optgroup>
+              <optgroup label="Print / Standard">
+                <option value="print-poster" ${state.size==='print-poster'?'selected':''}>Print poster 2480x3508 (A4 portrait)</option>
+                <option value="print-landscape" ${state.size==='print-landscape'?'selected':''}>Print landscape 3508x2480 (A4 landscape)</option>
+                <option value="square-1k" ${state.size==='square-1k'?'selected':''}>Square 1024x1024</option>
+                <option value="square-2k" ${state.size==='square-2k'?'selected':''}>Square 2048x2048</option>
+              </optgroup>
+            </select>
           </div>
         </div>
       </div>
@@ -7443,6 +7541,25 @@ function showSceneDetails(scene) {
   }
   if (toolbarCounter) toolbarCounter.textContent = promptEl.textContent.length.toLocaleString() + ' chars';
   if (platformSelect) platformSelect.onchange = (e) => updatePromptDisplay(e.target.value);
+
+  // V99: Modal size dropdown — change resolution on the fly
+  const modalSizeSelect = modal.querySelector('#modalSizeSelect');
+  if (modalSizeSelect) {
+    modalSizeSelect.addEventListener('change', (e) => {
+      const newSize = e.target.value;
+      if (newSize && newSize !== 'auto') {
+        state.size = newSize;
+        // Sync the brand bar size dropdown
+        const brandSizeSelect = document.getElementById('sizeSelect');
+        if (brandSizeSelect) brandSizeSelect.value = newSize;
+        if (typeof toast === 'function') {
+          const label = (typeof SIZE_LABEL !== 'undefined' && SIZE_LABEL[newSize]) || newSize;
+          toast(`Resolution: ${label}`);
+        }
+      }
+      updatePromptDisplay(currentPlatform);
+    });
+  }
   
   // V4.4: Custom text input
   const customTextInput = modal.querySelector('#promptCustomText');
@@ -8189,14 +8306,63 @@ async function initApp() {
     updateSliderLabel();
   }
   document.getElementById('formatSelect').onchange = (e) => state.format = e.target.value;
+  
+  // V99: HEX/RGB palette format toggle
+  const hexToRgb = (hex) => {
+    const h = String(hex || '').replace('#', '');
+    if (h.length !== 6) return '';
+    const r = parseInt(h.substring(0,2), 16);
+    const g = parseInt(h.substring(2,4), 16);
+    const b = parseInt(h.substring(4,6), 16);
+    return `${r}, ${g}, ${b}`;
+  };
+  const applyPaletteFormat = (mode) => {
+    const section = document.getElementById('paletteSection');
+    if (!section) return;
+    section.classList.toggle('palette-show-hex', mode !== 'off');
+    document.querySelectorAll('.brand-bar .swatch-hex').forEach(label => {
+      const idx = label.dataset.hexIdx;
+      const color = (state.colors && state.colors[idx]) || label.dataset.colorRaw || label.textContent;
+      label.dataset.colorRaw = color;
+      if (mode === 'hex') label.textContent = String(color).toLowerCase();
+      else if (mode === 'rgb') label.textContent = hexToRgb(color);
+    });
+    document.querySelectorAll('.palette-format-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.pf === mode);
+    });
+    state._paletteFormat = mode;
+  };
+  document.querySelectorAll('.palette-format-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();  // don't toggle the parent collapsible
+      e.preventDefault();
+      applyPaletteFormat(btn.dataset.pf);
+    });
+  });
+  // initialize off
+  applyPaletteFormat('off');
+  
   document.querySelectorAll('.brand-bar .swatch input').forEach(input => {
     input.oninput = (e) => {
       const i = parseInt(e.target.dataset.idx);
       state.colors[i] = e.target.value;
       e.target.parentElement.style.background = e.target.value;
-      // V98: Update the hex code label too
+      // V99: Update the hex code label in the currently-active format (off/hex/rgb)
       const hexLabel = e.target.parentElement.querySelector('.swatch-hex');
-      if (hexLabel) hexLabel.textContent = String(e.target.value).toLowerCase();
+      if (hexLabel) {
+        hexLabel.dataset.colorRaw = e.target.value;
+        const fmt = state._paletteFormat || 'off';
+        if (fmt === 'hex') hexLabel.textContent = String(e.target.value).toLowerCase();
+        else if (fmt === 'rgb') {
+          const h = String(e.target.value).replace('#', '');
+          if (h.length === 6) {
+            const r = parseInt(h.substring(0,2), 16);
+            const g = parseInt(h.substring(2,4), 16);
+            const b = parseInt(h.substring(4,6), 16);
+            hexLabel.textContent = `${r}, ${g}, ${b}`;
+          }
+        }
+      }
     };
   });
   initExportBar();
@@ -8458,6 +8624,33 @@ function buildExport(format) {
     ? V95_GEO.regions[state.country].name
     : 'Global / no specific region';
 
+  // V99: Rich master-context block — full per-prompt brief from the database.
+  // Threaded into every export format so downloads carry the full prompt psychology
+  // (Industry Context, Cinematic Scenario, Lighting Spec, Wardrobe, Framing, Pose,
+  // Design Principle, Conversion Intent, Archetype Blend, AOL, Recipe).
+  const v99RichBrief = (window._modalLoadedPrompt && window._modalLoadedPrompt.richBrief)
+    ? window._modalLoadedPrompt.richBrief
+    : (scene && scene.richBrief) || '';
+  const v99IndustryContext = (window._modalLoadedPrompt && window._modalLoadedPrompt.industryContext)
+    ? window._modalLoadedPrompt.industryContext
+    : (scene && scene.industryContext) || '';
+  const v99LightingSpec = (window._modalLoadedPrompt && window._modalLoadedPrompt.lightingSpec)
+    ? window._modalLoadedPrompt.lightingSpec
+    : (scene && scene.lightingSpec) || '';
+  const v99Wardrobe = (window._modalLoadedPrompt && window._modalLoadedPrompt.wardrobe)
+    ? window._modalLoadedPrompt.wardrobe
+    : (scene && scene.wardrobe) || '';
+  const v99Framing = (window._modalLoadedPrompt && window._modalLoadedPrompt.framing)
+    ? window._modalLoadedPrompt.framing
+    : (scene && scene.framing) || '';
+  const v99PoseDirection = (window._modalLoadedPrompt && window._modalLoadedPrompt.poseDirection)
+    ? window._modalLoadedPrompt.poseDirection
+    : (scene && scene.poseDirection) || '';
+  const v99Recipe = (window._modalLoadedPrompt && window._modalLoadedPrompt.recipe)
+    ? window._modalLoadedPrompt.recipe
+    : (scene && scene.recipe) || '';
+  const v99DesignReq = (window._modalDesignRequests || '').trim();
+
   // V6: Pre-build pixel resolution
   const _sizeStr = (typeof SIZE_LABEL !== 'undefined' && SIZE_LABEL[state.size]) ? SIZE_LABEL[state.size] : '';
   const _pxMatch = _sizeStr.match(/(\d{3,5})\s*[x×]\s*(\d{3,5})/i);
@@ -8560,7 +8753,33 @@ ${(state.communityPlatforms && state.communityPlatforms.length) ? state.communit
 ## Active Category
 ${cat.label || 'N/A'} - ${cat.description || ''}
 
-## Brand Override Block (the V5 authoritative directive appended to every prompt)
+## Master Context (V99 — full prompt psychology + cinematic brief)
+${v99RichBrief ? `\\`\\`\\`
+${v99RichBrief}
+\\`\\`\\`` : '_(rich brief not available — open this prompt in the modal first)_'}
+
+${v99IndustryContext ? `### Industry Context (deep niche knowledge)
+${v99IndustryContext}
+
+` : ''}${v99LightingSpec ? `### Lighting Specification
+${v99LightingSpec}
+
+` : ''}${v99Wardrobe ? `### Wardrobe Direction
+${v99Wardrobe}
+
+` : ''}${v99Framing ? `### Framing & Composition
+${v99Framing}
+
+` : ''}${v99PoseDirection ? `### Pose Direction
+${v99PoseDirection}
+
+` : ''}${v99Recipe ? `### Prompt Recipe (the proven structural pattern)
+${v99Recipe}
+
+` : ''}${v99DesignReq ? `### Your Additional Design Requests
+${v99DesignReq}
+
+` : ''}## Brand Override Block (the V5 authoritative directive appended to every prompt)
 \`\`\`
 ${v5BrandOverride.trim() || '(no overrides - wizard incomplete)'}
 \`\`\`
@@ -8643,6 +8862,15 @@ Apply this skill whenever generating prompts for:
 ${sceneName} - ${sceneTagline}
 ${sceneVisualDesc}
 
+${v99RichBrief ? `## Master Context (V99 — full prompt psychology)
+This is the deep context the prompt is built on. When generating images of this type, weave ALL of these elements together:
+
+\\`\\`\\`
+${v99RichBrief}
+\\`\\`\\`
+
+The Design Principle and Conversion Intent are AUTHORITATIVE — they describe the psychological response the image must trigger.
+` : ''}
 ---
 Generated by The Prompt Studio · ${generatedTimestamp}`;
   }
@@ -8717,6 +8945,13 @@ Upload these to the Claude Project for grounding:
 - Past content that worked well
 - Your competitor analysis or differentiation doc
 
+${v99RichBrief ? `## Master Context for ${sceneName} (V99 — full prompt psychology)
+\\`\\`\\`
+${v99RichBrief}
+\\`\\`\\`
+
+When the user requests this asset type, weave ALL elements above into the generated prompt. The Design Principle and Conversion Intent describe the psychological response the image must trigger in the viewer.
+` : ''}
 ---
 Generated by The Prompt Studio - ${generatedTimestamp}`;
   }
@@ -8786,6 +9021,13 @@ ${state.photoFeatures ? Object.entries(state.photoFeatures).filter(([k]) => k !=
 - Match the ${state.vibe || 'luxury'} vibe register
 - Style bias: ${state.styleLevel < 30 ? 'lean creative' : state.styleLevel > 70 ? 'lean professional' : 'balanced'}
 
+${v99RichBrief ? `## Master Context for ${sceneName}
+\`\`\`
+${v99RichBrief}
+\`\`\`
+
+When generating this asset type, weave ALL elements above into the generated prompt. Design Principle and Conversion Intent are AUTHORITATIVE.
+` : ''}
 ---
 Generated by The Prompt Studio · ${generatedTimestamp}`;
   }
@@ -8808,6 +9050,21 @@ Generated by The Prompt Studio · ${generatedTimestamp}`;
         archetype: v3.archetype,
         lighting: v3.lighting_variant,
         customText: customText
+      },
+      // V99: Full master context — includes Industry Context, Cinematic Scenario,
+      // Lighting Spec, Wardrobe, Framing, Safe Zones, Pose Direction, Design Principle,
+      // Conversion Intent, Archetype Blend, AOL, Variant Axes, and Recipe.
+      masterContext: {
+        richBrief: v99RichBrief,
+        industryContext: v99IndustryContext,
+        lightingSpec: v99LightingSpec,
+        wardrobe: v99Wardrobe,
+        framing: v99Framing,
+        poseDirection: v99PoseDirection,
+        recipe: v99Recipe,
+        userDesignRequests: v99DesignReq,
+        designPrinciple: scene.designPrinciple || '',
+        conversionIntent: scene.conversionIntent || ''
       },
       brandIdentity: {
         name: state.name,
@@ -8928,6 +9185,11 @@ ${(typeof getArchetypeVoiceBlend === 'function' && getArchetypeVoiceBlend()) || 
 
 ${(typeof getBusinessTypeTune === 'function' && getBusinessTypeTune()) || 'No business type selected'}
 
+${v99RichBrief ? `## 🎬 Master Context for ${sceneName}
+\`\`\`
+${v99RichBrief}
+\`\`\`
+` : ''}
 ---
 
 *Generated by The Prompt Studio · ${generatedTimestamp}*`;
@@ -8985,6 +9247,11 @@ ${customText || 'No custom text - use placeholder copy'}
 ## Voice
 ${(typeof getArchetypeVoiceBlend === 'function' && getArchetypeVoiceBlend()) || 'Professional'}
 
+${v99RichBrief ? `## Cinematic & Psychological Direction
+\`\`\`
+${v99RichBrief}
+\`\`\`
+` : ''}
 ---
 Generated by The Prompt Studio · ${generatedTimestamp}`;
   }
