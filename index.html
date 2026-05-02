@@ -445,6 +445,8 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
 .tile-filter-chip { padding: 4px 10px; background: white; color: var(--primary); border: 1px solid var(--border); border-radius: 100px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: inherit; }
 .tile-filter-chip:hover { border-color: var(--accent); background: rgba(197,168,128,0.06); }
 .tile-filter-chip.active { background: var(--primary); color: var(--accent); border-color: var(--primary); }
+.tf-chip-count { display: inline-block; margin-left: 4px; padding: 1px 6px; font-size: 10px; font-weight: 700; background: rgba(197,168,128,0.18); color: var(--accent-dark); border-radius: 100px; }
+.tile-filter-chip.active .tf-chip-count { background: rgba(197,168,128,0.35); color: var(--accent); }
 .tile-filter-clear { margin-left: auto; padding: 4px 12px; background: transparent; color: var(--text-muted); border: 1px dashed var(--border); border-radius: 100px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
 .tile-filter-clear:hover { color: var(--primary); border-color: var(--primary); border-style: solid; }
 @media (max-width: 640px) {
@@ -1181,8 +1183,10 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
         <label class="field-card-label" data-i18n="field.btype.label">Your Business Type</label>
       </div>
       <div class="field-card-hint" data-i18n="field.btype.hint">This tunes the language and positioning in your prompts.</div>
-      <div class="bt-grid" id="btGrid"></div>
-      <input type="text" class="wizard-input bt-other" id="btOther" placeholder="Tell us your business type...">
+      <select class="wizard-input" id="btSelect">
+        <option value="">— Choose your business type —</option>
+      </select>
+      <input type="text" class="wizard-input bt-other" id="btOther" placeholder="Tell us your business type..." style="margin-top:8px;">
     </div>
 
     <div class="field-card" data-step-trigger="1">
@@ -2185,7 +2189,7 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
 <div class="toast" id="toast"></div>
 <script>
 // ============ CONFIG ============
-const GITHUB = { user: 'authoritybuilder', repo: 'PromptStudioPro', branch: 'main' };
+const GITHUB = { user: 'authoritybuilder', repo: 'ThePromptStudio', branch: 'main' };
 
 const SEASONS = {
   'true-spring': { name: 'True Spring', palette: ['#FFB6C1','#FFD700','#98FB98','#87CEEB','#FFA07A'] },
@@ -5364,23 +5368,24 @@ function initWizard() {
     document.getElementById('inspirationGrid').appendChild(slot);
   }
 
-  // Render business types
-  const btGrid = document.getElementById('btGrid');
-  BUSINESS_TYPES.forEach(bt => {
-    const item = document.createElement('div');
-    item.className = 'bt-item';
-    item.textContent = bt.label;
-    item.dataset.id = bt.id;
-    item.onclick = () => {
-      document.querySelectorAll('.bt-item').forEach(i => i.classList.remove('selected'));
-      item.classList.add('selected');
-      state.bizType = bt.id;
+  // V97.2: Business type as compact dropdown (was a grid; replaced to shrink wizard)
+  const btSelect = document.getElementById('btSelect');
+  if (btSelect) {
+    BUSINESS_TYPES.forEach(bt => {
+      const opt = document.createElement('option');
+      opt.value = bt.id;
+      opt.textContent = bt.label;
+      btSelect.appendChild(opt);
+    });
+    // Restore on init
+    if (state.bizType) btSelect.value = state.bizType;
+    btSelect.onchange = (e) => {
+      state.bizType = e.target.value;
       const otherInput = document.getElementById('btOther');
-      otherInput.classList.toggle('show', bt.id === 'other');
+      if (otherInput) otherInput.classList.toggle('show', e.target.value === 'other');
       updateStepTrack();
     };
-    btGrid.appendChild(item);
-  });
+  }
   document.getElementById('btOther').oninput = (e) => { state.bizTypeOther = e.target.value; updateStepTrack(); };
 
   // Render archetypes
@@ -5413,44 +5418,92 @@ function initWizard() {
     const slots = document.querySelectorAll('#photoGrid .photo-slot');
     let analysedCount = 0;
     const seasonVotes = {};
-    files.forEach((file, i) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const img = new Image();
-        img.onload = () => {
-          const season = analyseImageColors(img);
-          seasonVotes[season] = (seasonVotes[season] || 0) + 1;
-          analysedCount++;
-          // V6: After 3+ photos, auto-pick most-voted season + apply its palette as brand colours
-          if (analysedCount >= Math.min(3, files.length) && !state.season) {
-            const winningSeason = Object.entries(seasonVotes).sort((a, b) => b[1] - a[1])[0][0];
-            state.season = winningSeason;
-            renderSeasons();
-            document.getElementById('seasonSection').style.display = 'block';
-            // V6: ALSO extract photo features for the BRAND OVERRIDE block
-            v3ExtractPhotoFeatures(file).then(feat => {
-              if (feat) {
-                state.photoFeatures = feat;
-                try { localStorage.setItem('promptStudio_photoFeatures', JSON.stringify(feat)); } catch (err) {}
-              }
-            });
-            setTimeout(() => {
-              const card = document.querySelector(`[data-season="${winningSeason}"]`);
-              if (card) {
-                card.click();
-                if (typeof toast === 'function') {
-                  toast(`✓ Detected ${SEASONS[winningSeason].name} — applied to your brand palette`);
-                }
-              }
-            }, 150);
-          }
-          updateStepTrack();
-        };
-        img.src = ev.target.result;
-        slots[i].innerHTML = `<img src="${ev.target.result}" alt="Photo ${i+1}">`;
-        slots[i].classList.add('filled');
+
+    // V97.2: Fast thumbnail + parallel analysis pipeline
+    // 1. Use createObjectURL (instant) instead of readAsDataURL (slow base64 encode)
+    // 2. Compress thumbnails to 320px on the long edge so the DOM doesn't bloat
+    // 3. Defer photo-feature extraction to the FIRST photo only (sufficient for capsule)
+    // 4. Run season detection on a small downsampled canvas for speed
+    
+    const compressToThumb = (file, maxDim) => new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+          const w = Math.max(40, Math.round(img.naturalWidth * scale));
+          const h = Math.max(40, Math.round(img.naturalHeight * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          // Get compressed thumbnail as small JPEG data URL
+          const thumb = canvas.toDataURL('image/jpeg', 0.78);
+          URL.revokeObjectURL(url);
+          resolve({ img, thumb, canvas });
+        } catch (err) {
+          URL.revokeObjectURL(url);
+          reject(err);
+        }
       };
-      reader.readAsDataURL(file);
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image load failed')); };
+      img.src = url;
+    });
+
+    files.forEach((file, i) => {
+      // Show an immediate "loading" state so the user sees instant feedback
+      if (slots[i]) {
+        slots[i].classList.add('filled');
+        slots[i].innerHTML = '<div class="photo-loading" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:11px;color:var(--text-muted);">Loading…</div>';
+      }
+      
+      compressToThumb(file, 320).then(({ img, thumb, canvas }) => {
+        // Render compressed thumbnail (small) — much lighter than full base64
+        if (slots[i]) {
+          slots[i].innerHTML = `<img src="${thumb}" alt="Photo ${i+1}" loading="lazy">`;
+        }
+        
+        // Season detection on the already-downsampled canvas (skip the redundant canvas pass)
+        // analyseImageColors expects an <img> element; pass the original
+        const season = analyseImageColors(img);
+        seasonVotes[season] = (seasonVotes[season] || 0) + 1;
+        analysedCount++;
+
+        // Trigger feature extraction ONLY on the first photo (sufficient for the identity capsule)
+        if (i === 0) {
+          v3ExtractPhotoFeatures(file).then(feat => {
+            if (feat) {
+              state.photoFeatures = feat;
+              try { localStorage.setItem('promptStudio_photoFeatures', JSON.stringify(feat)); } catch (err) {}
+              if (typeof toast === 'function' && feat._skinTone) {
+                toast(`✓ Detected: ${feat._skinTone} skin (${feat._undertone || 'neutral'}), ${(feat._hairColour || 'hair').split(' (')[0]}`);
+              }
+            }
+          });
+        }
+
+        // Apply detected season after enough votes
+        if (analysedCount >= Math.min(3, files.length) && !state.season) {
+          const winningSeason = Object.entries(seasonVotes).sort((a, b) => b[1] - a[1])[0][0];
+          state.season = winningSeason;
+          renderSeasons();
+          const sec = document.getElementById('seasonSection');
+          if (sec) sec.style.display = 'block';
+          setTimeout(() => {
+            const card = document.querySelector(`[data-season="${winningSeason}"]`);
+            if (card) {
+              card.click();
+              if (typeof toast === 'function') {
+                toast(`✓ Detected ${SEASONS[winningSeason].name} — applied to your brand palette`);
+              }
+            }
+          }, 150);
+        }
+        updateStepTrack();
+      }).catch(err => {
+        console.warn('Photo processing failed for', file.name, err);
+        if (slots[i]) slots[i].innerHTML = '<div style="color:#c47900;font-size:10px;padding:4px;">Failed</div>';
+      });
     });
   };
 
@@ -5458,23 +5511,42 @@ function initWizard() {
     const files = Array.from(e.target.files).slice(0, 10);
     const slots = document.querySelectorAll('#inspirationGrid .photo-slot');
     files.forEach((file, i) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const img = new Image();
-        img.onload = () => {
+      // V97.2: same fast pipeline as photo upload
+      if (slots[i]) {
+        slots[i].classList.add('filled');
+        slots[i].innerHTML = '<div class="photo-loading" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:11px;color:var(--text-muted);">Loading…</div>';
+      }
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, 320 / Math.max(img.naturalWidth, img.naturalHeight));
+          const w = Math.max(40, Math.round(img.naturalWidth * scale));
+          const h = Math.max(40, Math.round(img.naturalHeight * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const thumb = canvas.toDataURL('image/jpeg', 0.78);
+          if (slots[i]) slots[i].innerHTML = `<img src="${thumb}" alt="Inspiration ${i+1}" loading="lazy">`;
+          
           const aesthetic = analyseInspirationAesthetic(img);
           state.inspiration.push(aesthetic);
           if (state.inspiration.length === 1) {
-            document.getElementById('wizVisual').value = aesthetic;
+            const v = document.getElementById('wizVisual');
+            if (v) v.value = aesthetic;
             state.visual = aesthetic;
             updateStepTrack();
           }
-        };
-        img.src = ev.target.result;
-        slots[i].innerHTML = `<img src="${ev.target.result}" alt="Inspiration ${i+1}">`;
-        slots[i].classList.add('filled');
+        } catch (err) {
+          if (slots[i]) slots[i].innerHTML = '<div style="color:#c47900;font-size:10px;padding:4px;">Failed</div>';
+        }
+        URL.revokeObjectURL(url);
       };
-      reader.readAsDataURL(file);
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        if (slots[i]) slots[i].innerHTML = '<div style="color:#c47900;font-size:10px;padding:4px;">Failed</div>';
+      };
+      img.src = url;
     });
   };
 
@@ -6174,14 +6246,36 @@ function renderChannelTypes() {
 // V97: Tile-level filter chips (Aspect / Background / Render)
 function renderTileFilters() {
   if (!state.tileFilters) state.tileFilters = { aspect: 'All', background: 'All', render: 'All' };
-  
-  // Aspect chips — only the most common aspects
-  const aspects = ['All', '16:9', '4:5', '1:1', '9:16'];
+
+  // V97.1: Compute what's actually present in the currently-visible scenes so chips reflect reality
+  // Walk the search index (scenes) to count each dimension's values.
+  const visibleScenes = (state.searchIndex || []).filter(s => {
+    // Honour category filter if user has clicked into one
+    if (state.cat && s.category !== state.cat) return false;
+    return true;
+  });
+  const aspectCounts = {}, bgCounts = {}, renderCounts = {};
+  visibleScenes.forEach(s => {
+    const a = s.aspect || (s.v && s.v.aspect) || '';
+    if (a) aspectCounts[a] = (aspectCounts[a] || 0) + 1;
+    const bg = s.v94_background || 'lifestyle_environment';
+    bgCounts[bg] = (bgCounts[bg] || 0) + 1;
+    const r = (typeof v97MigrateRenderKey === 'function')
+      ? v97MigrateRenderKey(s.v94_render || 'hyper-realistic')
+      : (s.v94_render || 'hyper-realistic');
+    renderCounts[r] = (renderCounts[r] || 0) + 1;
+  });
+
+  // Aspect chips — include any aspect with at least 1 prompt in current view, ordered by count
+  const aspects = ['All'].concat(
+    Object.entries(aspectCounts).sort((a,b) => b[1] - a[1]).map(([k]) => k)
+  );
   const aspectWrap = document.getElementById('tileFilterAspect');
   if (aspectWrap) {
-    aspectWrap.innerHTML = aspects.map(a => 
-      `<button type="button" class="tile-filter-chip ${state.tileFilters.aspect === a ? 'active' : ''}" data-tf-aspect="${a}">${a}</button>`
-    ).join('');
+    aspectWrap.innerHTML = aspects.map(a => {
+      const count = a === 'All' ? visibleScenes.length : (aspectCounts[a] || 0);
+      return `<button type="button" class="tile-filter-chip ${state.tileFilters.aspect === a ? 'active' : ''}" data-tf-aspect="${a}">${a} <span class="tf-chip-count">${count}</span></button>`;
+    }).join('');
     aspectWrap.querySelectorAll('[data-tf-aspect]').forEach(b => {
       b.onclick = () => {
         state.tileFilters.aspect = b.dataset.tfAspect;
@@ -6190,14 +6284,18 @@ function renderTileFilters() {
       };
     });
   }
-  
-  // Background chips — pull from V94_BACKGROUND_STYLES
+
+  // Background chips — every background actually present in the data, ordered by count
   const bgWrap = document.getElementById('tileFilterBg');
   if (bgWrap && typeof V94_BACKGROUND_STYLES !== 'undefined') {
-    const bgs = ['All', ...Object.keys(V94_BACKGROUND_STYLES).slice(0, 6)]; // top 6 only to fit
+    const bgs = ['All'].concat(
+      Object.entries(bgCounts).sort((a,b) => b[1] - a[1]).map(([k]) => k)
+    );
     bgWrap.innerHTML = bgs.map(k => {
       const label = k === 'All' ? 'All' : (V94_BACKGROUND_STYLES[k] && V94_BACKGROUND_STYLES[k].name) || k;
-      return `<button type="button" class="tile-filter-chip ${state.tileFilters.background === k ? 'active' : ''}" data-tf-bg="${k}" title="${label}">${label.split(' ').slice(0,2).join(' ')}</button>`;
+      const count = k === 'All' ? visibleScenes.length : (bgCounts[k] || 0);
+      const shortLabel = label.split(' ').slice(0, 2).join(' ');
+      return `<button type="button" class="tile-filter-chip ${state.tileFilters.background === k ? 'active' : ''}" data-tf-bg="${k}" title="${label}">${shortLabel} <span class="tf-chip-count">${count}</span></button>`;
     }).join('');
     bgWrap.querySelectorAll('[data-tf-bg]').forEach(b => {
       b.onclick = () => {
@@ -6207,14 +6305,17 @@ function renderTileFilters() {
       };
     });
   }
-  
-  // Render chips — top 6 unified taxonomy
+
+  // Render chips — every render style actually present, ordered by count, using unified labels
   const renderWrap = document.getElementById('tileFilterRender');
   if (renderWrap && typeof V94_RENDER_STYLES !== 'undefined') {
-    const renders = ['All', 'hyper-realistic', 'editorial-photo', 'documentary-photo', 'pixar', 'flat-vector', 'watercolour'];
+    const renders = ['All'].concat(
+      Object.entries(renderCounts).sort((a,b) => b[1] - a[1]).map(([k]) => k)
+    );
     renderWrap.innerHTML = renders.map(k => {
       const label = k === 'All' ? 'All' : (V94_RENDER_STYLES[k] && V94_RENDER_STYLES[k].name) || k;
-      return `<button type="button" class="tile-filter-chip ${state.tileFilters.render === k ? 'active' : ''}" data-tf-render="${k}" title="${label}">${label}</button>`;
+      const count = k === 'All' ? visibleScenes.length : (renderCounts[k] || 0);
+      return `<button type="button" class="tile-filter-chip ${state.tileFilters.render === k ? 'active' : ''}" data-tf-render="${k}" title="${label}">${label} <span class="tf-chip-count">${count}</span></button>`;
     }).join('');
     renderWrap.querySelectorAll('[data-tf-render]').forEach(b => {
       b.onclick = () => {
@@ -6224,7 +6325,7 @@ function renderTileFilters() {
       };
     });
   }
-  
+
   // Clear button
   const clearBtn = document.getElementById('tileFilterClear');
   if (clearBtn) {
@@ -8240,6 +8341,12 @@ function buildExport(format) {
     ? 'Stylised character (best artistic version of subject)'
     : 'Photoreal (preserve subject exactly — documentary-grade)';
 
+  // V97.1: Regional context for exports — pull the same context that runtime injects
+  const v97RegionalContext = (typeof v95BuildRegionalContext === 'function') ? v95BuildRegionalContext().trim() : '';
+  const v97CountryName = (state.country && state.country !== 'GLOBAL' && typeof V95_GEO !== 'undefined' && V95_GEO.regions && V95_GEO.regions[state.country])
+    ? V95_GEO.regions[state.country].name
+    : 'Global / no specific region';
+
   // V6: Pre-build pixel resolution
   const _sizeStr = (typeof SIZE_LABEL !== 'undefined' && SIZE_LABEL[state.size]) ? SIZE_LABEL[state.size] : '';
   const _pxMatch = _sizeStr.match(/(\d{3,5})\s*[x×]\s*(\d{3,5})/i);
@@ -8347,6 +8454,10 @@ ${cat.label || 'N/A'} — ${cat.description || ''}
 ${v5BrandOverride.trim() || '(no overrides — wizard incomplete)'}
 \`\`\`
 
+## Regional Context (V97 — appended for culturally-authentic environments)
+**Region:** ${v97CountryName}
+${v97RegionalContext ? '\\`\\`\\`\\n' + v97RegionalContext + '\\n\\`\\`\\`' : '_(no region selected — environments default to globally-neutral aesthetic)_'}
+
 ${v6EditorialDirective ? `## Editorial Quality Directive (V6 — appended in photoreal mode)\n\`\`\`${v6EditorialDirective}\n\`\`\`\n` : ''}
 ---
 Generated by The Prompt Studio v6.0 · Authority Builder
@@ -8377,6 +8488,7 @@ ${(typeof getArchetypeVoiceBlend === 'function' && getArchetypeVoiceBlend()) || 
 - **Outfit defaults:** ${state.outfit || 'professional attire'}
 - **Aesthetic descriptors:** ${state.visual || 'refined and professional'}
 - **Vibe register:** ${state.vibe || 'luxury'}
+- **Region:** ${v97CountryName}${v97RegionalContext ? ' — environments should match regional aesthetic' : ''}
 - **Title font:** ${titleFontLabel}
 - **Heading 1 font:** ${headingFontLabel}
 - **Heading 2 font:** ${subheadingFontLabel}
@@ -8446,6 +8558,7 @@ ${(typeof getBusinessTypeTune === 'function' && getBusinessTypeTune()) || 'Profe
 - **Brand Colours:** ${colours}
 - **Outfit Defaults:** ${state.outfit || 'professional attire'}
 - **Aesthetic Keywords:** ${state.visual || 'refined and professional'}
+- **Region:** ${v97CountryName}${v97RegionalContext ? ' — render environments per regional aesthetic' : ''}
 - **Title Font:** ${titleFontLabel}
 - **H1 Font:** ${headingFontLabel}
 - **H2 Font:** ${subheadingFontLabel}
@@ -8526,6 +8639,7 @@ ${(typeof getArchetypeVoiceBlend === 'function' && getArchetypeVoiceBlend()) || 
 - **Outfit defaults:** ${state.outfit || 'professional attire'}
 - **Aesthetic descriptors:** ${state.visual || 'refined'}
 - **Vibe:** ${state.vibe || 'luxury'}
+- **Region:** ${v97CountryName}${v97RegionalContext ? ' — render environments per regional aesthetic (e.g. "Australian library" should mean Sydney sandstone reading room, not Harvard gothic)' : ''}
 - **Title font:** ${titleFontLabel}
 - **H1 font:** ${headingFontLabel}
 - **H2 font:** ${subheadingFontLabel}
@@ -8590,8 +8704,13 @@ Generated by The Prompt Studio · ${generatedTimestamp}`;
         businessType: state.bizType,
         industry: state.industry,
         archetypes: state.archetypes,
-        vibe: state.vibe
+        archetypeBlend: (typeof getArchetypeVoiceBlend === 'function') ? getArchetypeVoiceBlend() : '',
+        vibe: state.vibe,
+        region: state.country || 'GLOBAL',
+        regionName: v97CountryName,
+        regionalContext: v97RegionalContext
       },
+      renderedPrompt: v5RenderedPrompt,
       visualSystem: {
         colours: state.colors,
         outfit: state.outfit,
@@ -8659,6 +8778,7 @@ ${sceneVisualDesc}
 | Owner | ${state.name || 'N/A'} |
 | Business | ${state.business || 'N/A'} |
 | Type | ${state.bizType || 'N/A'} |
+| Region | ${v97CountryName} |
 | Archetypes | ${archetypeText || 'None'} |
 | Vibe | ${state.vibe || 'luxury'} |
 | Palette | ${colours} |
@@ -8710,7 +8830,9 @@ Prompt setup:
 • Scene: ${sceneName}
 • Tagline: ${sceneTagline}
 • Archetype: ${archetypeText || 'editorial'}
+• Palette: ${colours}
 • Photo style: ${designStyleLabel}
+• Region: ${v97CountryName}
 • Output: ${sizeLabel}
 • Custom text: ${customText || 'none'}
 
@@ -8737,6 +8859,7 @@ ${sceneVisualDesc}
 
 ## Brand Application
 - **Colours:** ${colours}
+- **Region:** ${v97CountryName}
 - **Title font:** ${titleFontLabel}
 - **H1:** ${headingFontLabel}
 - **H2:** ${subheadingFontLabel}
