@@ -8035,24 +8035,36 @@ function showSceneDetails(scene) {
       ${_wardrobeHtml}
       ${_paletteHtml}
 
-      <div class="prompt-modal-export-bar">
-        <span class="prompt-modal-export-label">Export</span>
-        <button class="export-btn" data-export="md">Markdown</button>
-        <button class="export-btn" data-export="skill">SKILL.md</button>
-        <button class="export-btn" data-export="claude-project">Claude Project</button>
-        <button class="export-btn" data-export="chatgpt-gpt">ChatGPT GPT</button>
-        <button class="export-btn" data-export="json">JSON</button>
-        <button class="export-btn" data-export="notion">Notion</button>
-      </div>
-
-      <div class="prompt-modal-community" style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="prompt-modal-community-btn" id="promptModalCommunity" data-i18n="modal.share" style="flex:1;min-width:200px;">🎉 Share to the community</button>
-        <button class="prompt-modal-community-btn" id="promptModalRate" data-i18n="modal.rate" style="flex:1;min-width:200px;background:white;color:var(--primary);border:2px solid var(--primary);">⭐ Rate this prompt / share output</button>
-      </div>
     </div>
   `;
   document.body.appendChild(modal);
   document.body.classList.add('modal-open');
+  // Append export and community directly to modal-box (avoids innerHTML template issues)
+  (function() {
+    var box = modal.querySelector('.prompt-modal-box');
+    if (!box) return;
+    var eb = document.createElement('div');
+    eb.className = 'prompt-modal-export-bar';
+    eb.innerHTML = '<span class="prompt-modal-export-label">Export</span><button class="export-btn" data-export="md">Markdown</button><button class="export-btn" data-export="skill">SKILL.md</button><button class="export-btn" data-export="claude-project">Claude Project</button><button class="export-btn" data-export="chatgpt-gpt">ChatGPT GPT</button><button class="export-btn" data-export="json">JSON</button><button class="export-btn" data-export="notion">Notion</button>';
+    box.appendChild(eb);
+    var cb = document.createElement('div');
+    cb.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;';
+    var communityBtn = document.createElement('button');
+    communityBtn.className = 'prompt-modal-community-btn';
+    communityBtn.id = 'promptModalCommunity';
+    communityBtn.setAttribute('data-i18n','modal.share');
+    communityBtn.style.cssText = 'flex:1;min-width:200px;';
+    communityBtn.textContent = '\uD83C\uDF89 Share to the community';
+    var rateBtn = document.createElement('button');
+    rateBtn.className = 'prompt-modal-community-btn';
+    rateBtn.id = 'promptModalRate';
+    rateBtn.setAttribute('data-i18n','modal.rate');
+    rateBtn.style.cssText = 'flex:1;min-width:200px;background:white;color:var(--primary);border:2px solid var(--primary);';
+    rateBtn.textContent = '\u2B50 Rate this prompt / share output';
+    cb.appendChild(communityBtn);
+    cb.appendChild(rateBtn);
+    box.appendChild(cb);
+  })();
   // V7: Translate the just-rendered modal
   if (typeof v7TranslateNewContent === 'function') v7TranslateNewContent(modal);
 
