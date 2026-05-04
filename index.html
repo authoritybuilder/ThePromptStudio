@@ -7779,13 +7779,27 @@ function showSceneDetails(scene) {
   if (state.business) wizardFilledParts.push(state.business);
   if (state.archetypes && state.archetypes.length) wizardFilledParts.push(state.archetypes.map(function(a){return a.charAt(0).toUpperCase()+a.slice(1);}).join(' / '));
 
+
+  // Pre-compute conditional HTML blocks (avoids nested backtick issues in innerHTML template)
+  const _taglineHtml = tagline ? '<p class="prompt-modal-tagline">' + tagline + '</p>' : '';
+  const _wizardBannerHtml = wizardIncomplete
+    ? '<div style="padding:12px 16px;margin:0 0 16px;background:rgba(196,121,0,0.08);border-left:4px solid #c47900;border-radius:6px;font-size:13px;color:var(--text);"><strong>\u26a0 Personalise this prompt:</strong> Still missing ' + missingFields.join(', ') + '. Your prompt will be generic until the wizard is complete. <button id="reopenWizardFromModal" style="margin-left:8px;padding:3px 10px;background:var(--accent);color:var(--primary);border:none;border-radius:5px;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;">Complete wizard \u2192</button></div>'
+    : wizardFilledParts.length
+      ? '<div style="padding:8px 14px;margin:0 0 12px;background:rgba(19,38,32,0.04);border-left:3px solid var(--primary);border-radius:6px;font-size:12px;color:var(--text-muted);">\u2713 Personalised for <strong style="color:var(--primary)">' + wizardFilledParts.join(' \u00b7 ') + '</strong></div>'
+      : '';
+  const _specGridHtml = v.business_moment ? ('<div class="prompt-modal-spec-grid"><div class="spec-block"><div class="spec-label">Business moment</div><div class="spec-value">' + v.business_moment + '</div></div>' + (v.intent ? '<div class="spec-block"><div class="spec-label">Intent</div><div class="spec-value">' + v.intent + '</div></div>' : '') + (v.aspect ? '<div class="spec-block"><div class="spec-label">Aspect / Dimensions</div><div class="spec-value">' + v.aspect + ' \u00b7 ' + (v.dimensions || '') + '</div></div>' : '') + (v.archetype ? '<div class="spec-block"><div class="spec-label">Archetype</div><div class="spec-value">' + v.archetype + '</div></div>' : '') + '</div>') : '';
+  const _scenarioHtml = v.scenario ? '<details class="prompt-modal-details"><summary>Cinematic scenario</summary><p>' + v.scenario + '</p></details>' : '';
+  const _lightingHtml = v.lighting_spec ? '<details class="prompt-modal-details"><summary>Lighting specification</summary><p>' + v.lighting_spec + '</p></details>' : '';
+  const _wardrobeHtml = v.wardrobe ? '<details class="prompt-modal-details"><summary>Wardrobe</summary><p>' + v.wardrobe + '</p></details>' : '';
+  const _paletteHtml = v.palette ? '<details class="prompt-modal-details"><summary>Palette</summary><p>' + v.palette + '</p></details>' : '';
+
   modal.innerHTML = `
     <div class="prompt-modal-box">
       <div class="prompt-modal-header">
         <div class="prompt-modal-header-text">
           <div class="prompt-modal-eyebrow">${aolPill}${eyebrowText}</div>
           <h2 class="prompt-modal-title">${displayName}</h2>
-          ${tagline ? `<p class="prompt-modal-tagline">${tagline}</p>` : ''}
+          ${_taglineHtml}
           <p class="prompt-modal-visual-desc"><strong style="color:var(--accent-dark)">What you get:</strong> ${summary}</p>
         </div>
         <div class="prompt-modal-header-actions">
@@ -7794,12 +7808,7 @@ function showSceneDetails(scene) {
         </div>
       </div>
 
-      ${wizardIncomplete ? `<div style="padding:12px 16px;margin:0 0 16px;background:rgba(196,121,0,0.08);border-left:4px solid #c47900;border-radius:6px;font-size:13px;color:var(--text);">
-        <strong>⚠ Personalise this prompt:</strong> Still missing ${missingFields.join(', ')}. Your prompt will be generic until the wizard is complete.
-        <button id="reopenWizardFromModal" style="margin-left:8px;padding:3px 10px;background:var(--accent);color:var(--primary);border:none;border-radius:5px;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;">Complete wizard →</button>
-      </div>` : wizardFilledParts.length ? `<div style="padding:8px 14px;margin:0 0 12px;background:rgba(19,38,32,0.04);border-left:3px solid var(--primary);border-radius:6px;font-size:12px;color:var(--text-muted);">
-        ✓ Personalised for <strong style="color:var(--primary)">${wizardFilledParts.join(' · ')}</strong>
-      </div>` : ''}
+      ${_wizardBannerHtml}
 
       ${v6BuildMiniBrief(scene, sceneCat)}
 
@@ -8017,20 +8026,14 @@ function showSceneDetails(scene) {
           <div class="prompt-customise-hint" data-i18n="modal.designnotes.hint" style="display:none;" id="promptDesignNotesHint">These notes are injected directly into the prompt as authoritative direction the AI must follow.</div>
         </div>
       </div>
-        </div>
       </details>
 
-      ${v.business_moment ? `<div class="prompt-modal-spec-grid">
-        <div class="spec-block"><div class="spec-label">Business moment</div><div class="spec-value">${v.business_moment}</div></div>
-        ${v.intent ? `<div class="spec-block"><div class="spec-label">Intent</div><div class="spec-value">${v.intent}</div></div>` : ''}
-        ${v.aspect ? `<div class="spec-block"><div class="spec-label">Aspect / Dimensions</div><div class="spec-value">${v.aspect} · ${v.dimensions || ''}</div></div>` : ''}
-        ${v.archetype ? `<div class="spec-block"><div class="spec-label">Archetype</div><div class="spec-value">${v.archetype}</div></div>` : ''}
-      </div>` : ''}
+      ${_specGridHtml}
 
-      ${v.scenario ? `<details class="prompt-modal-details"><summary>Cinematic scenario</summary><p>${v.scenario}</p></details>` : ''}
-      ${v.lighting_spec ? `<details class="prompt-modal-details"><summary>Lighting specification</summary><p>${v.lighting_spec}</p></details>` : ''}
-      ${v.wardrobe ? `<details class="prompt-modal-details"><summary>Wardrobe</summary><p>${v.wardrobe}</p></details>` : ''}
-      ${v.palette ? `<details class="prompt-modal-details"><summary>Palette</summary><p>${v.palette}</p></details>` : ''}
+      ${_scenarioHtml}
+      ${_lightingHtml}
+      ${_wardrobeHtml}
+      ${_paletteHtml}
 
       <div class="prompt-modal-export-bar">
         <span class="prompt-modal-export-label">Export</span>
