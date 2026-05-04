@@ -229,7 +229,23 @@ body.pause-animations *, body.pause-animations *::before, body.pause-animations 
 .brand-bar input[type="text"] { font-size: 11px; padding: 3px 6px; height: 24px; max-width: 130px; }
 .brand-bar .gender-pill, .brand-bar .archetype-pill, .brand-bar .gender-btn { font-size: 10px; padding: 2px 7px; height: 22px; line-height: 18px; }
 .brand-bar button, .brand-bar .btn-quick { font-size: 10px; padding: 3px 7px; height: 24px; }
-.swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s; position: relative; display: inline-block; }
+.swatch { width: 28px; height: 28px; border-radius: 6px; border: 2px solid var(--border); cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; position: relative; display: inline-block; flex-shrink: 0; }
+.swatch:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.18); border-color: var(--accent); }
+.swatch input[type="color"] { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; inset: 0; border: 0; padding: 0; pointer-events: none; }
+/* Colour picker popup */
+.cpop-overlay { position: fixed; inset: 0; z-index: 3000; background: rgba(19,38,32,0.6); display: flex; align-items: center; justify-content: center; }
+.cpop-box { background: #fff; border-radius: 14px; padding: 22px; width: 300px; box-shadow: 0 8px 32px rgba(19,38,32,0.22); }
+.cpop-title { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 14px; font-family: var(--font-display); }
+.cpop-preview { width: 100%; height: 52px; border-radius: 8px; border: 2px solid var(--border); margin-bottom: 12px; }
+.cpop-wheel { width: 100%; height: 42px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; margin-bottom: 12px; }
+.cpop-field { margin-bottom: 10px; }
+.cpop-label { display: block; font-size: 10px; font-weight: 700; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+.cpop-input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-family: monospace; color: var(--primary); }
+.cpop-input:focus { outline: none; border-color: var(--accent); }
+.cpop-actions { display: flex; gap: 8px; margin-top: 14px; }
+.cpop-btn { flex: 1; padding: 9px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); font-family: inherit; }
+.cpop-btn.primary { background: var(--primary); color: var(--accent); border-color: var(--primary); }
+.cpop-btn.cancel { background: var(--bg); color: var(--text-muted); }
 .swatch input[type="color"] { width: 100%; height: 100%; border: 0; padding: 0; cursor: pointer; opacity: 0; }
 .swatch-hex { position: absolute; top: 19px; left: 50%; transform: translateX(-50%); font-size: 7.5px; font-family: 'Courier New', monospace; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; pointer-events: none; letter-spacing: 0.02em; display: none; }
 .brand-section.palette-show-hex .swatch-hex { display: inline-block; }
@@ -339,7 +355,7 @@ body.pause-animations *, body.pause-animations *::before, body.pause-animations 
 .export-btn.share:hover { background: var(--deepest); }
 
 /* === TILES === */
-.tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(205px, 1fr)); gap: 14px; }
 .tile { background: white; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.25s ease; position: relative; }
 .tile:hover { border-color: var(--accent); box-shadow: var(--shadow); transform: translateY(-2px); }
 .tile.copying { border-color: var(--green); box-shadow: 0 0 0 2px var(--green); }
@@ -554,7 +570,7 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
 .tile-px-badge { background: rgba(15,81,50,0.85); color: var(--accent); font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 100px; letter-spacing: 0.03em; margin-left: 4px; font-family: 'Courier New', monospace; }
 .tile-save-btn { background: rgba(255,255,255,0.22); color: white; border: 1px solid rgba(255,255,255,0.35); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; padding: 0; }
 .tile-save-btn:hover, .tile-save-btn.saved { background: var(--accent); color: var(--primary); border-color: var(--accent); }
-.tile-preview-title { color: var(--accent); font-family: var(--font-display); font-size: 18px; font-weight: 700; line-height: 1.15; text-align: center; margin: auto 0 8px 0; padding: 8px 10px; flex: 1; display: flex; align-items: center; justify-content: center; text-shadow: 0 2px 8px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.7); }
+.tile-preview-title { color: var(--accent); font-family: var(--font-display); font-size: 19px; font-weight: 700; line-height: 1.2; text-align: center; margin: auto 0 8px 0; padding: 8px 10px; flex: 1; display: flex; align-items: center; justify-content: center; text-shadow: 0 2px 8px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.7); }
 .tile-preview-archetype { color: rgba(255,255,255,0.85); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 3px 8px; background: rgba(0,0,0,0.55); border-radius: 100px; align-self: center; }
 
 .tile-body { padding: 12px 14px 14px; }
@@ -663,7 +679,7 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
 @media (max-width: 1024px) {
   .shell { grid-template-columns: 240px 1fr; }
   .main-pane { padding: 22px 22px 60px; }
-  .tile-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .tile-grid { grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; }
   .tile-preview-title { font-size: 16px; }
 }
 
@@ -1147,9 +1163,59 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
 /* V8.8.1: The old @supports/aspect-ratio fallback override is no longer needed - 
    our mobile rules now use explicit height instead of aspect-ratio. */
 
+
+/* V100: Modal as bottom sheet on mobile */
+@media (max-width: 600px) {
+  .prompt-modal-overlay { padding: 0 !important; align-items: flex-end !important; }
+  .prompt-modal-box { border-radius: 18px 18px 0 0 !important; padding: 14px 14px 20px !important; max-height: 95dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .prompt-modal-header { margin-bottom: 8px; }
+  .prompt-modal-title { font-size: 15px !important; line-height: 1.25; }
+  .prompt-modal-tagline { font-size: 12px !important; margin-top: 2px; }
+  .prompt-modal-visual-desc { font-size: 11px !important; margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .prompt-mini-brief { padding: 8px 10px !important; margin-bottom: 8px !important; }
+  .brief-headline { font-size: 12px !important; gap: 6px !important; }
+  .brief-headline-text { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  .brief-body { display: none !important; }
+  .brief-chips { gap: 4px !important; margin-top: 5px !important; }
+  .brief-chip { font-size: 9px !important; padding: 2px 7px !important; }
+  .prompt-modal-output-banner { padding: 8px 10px !important; margin-bottom: 8px !important; }
+  .output-banner-label { font-size: 9px !important; margin-bottom: 2px !important; }
+  .output-banner-select { font-size: 13px !important; padding: 7px 28px 7px 8px !important; }
+  .output-banner-divider { display: none !important; }
+  .output-banner-row { flex-wrap: nowrap !important; gap: 8px !important; }
+  .output-banner-platform, .output-banner-spec { flex: 1 1 0 !important; min-width: 0 !important; }
+  .prompt-modal-prompt { font-size: 12px !important; padding: 10px 12px !important; max-height: 220px !important; line-height: 1.5; }
+  .prompt-modal-prompt-toolbar { padding: 6px 10px; }
+  .prompt-toolbar-label, .prompt-toolbar-counter { font-size: 10px; }
+  .prompt-modal-prompt-actions { flex-direction: row !important; flex-wrap: wrap; gap: 6px !important; }
+  .prompt-modal-action { font-size: 12px !important; padding: 8px 12px !important; flex: 1 1 auto; }
+  .prompt-modal-action.primary { flex: 1 0 100% !important; }
+  .prompt-modal-customise { padding: 8px 10px !important; margin-bottom: 8px !important; }
+}
+
+
+/* V100: Modal prompt block — no wasted space while loading */
+.prompt-modal-prompt-block { margin-bottom: 10px; }
+.prompt-modal-prompt[data-loading="true"] { min-height: 0 !important; padding: 8px 14px !important; color: var(--text-muted) !important; font-style: italic; }
+/* Customise toggle (details/summary) */
+.prompt-modal-customise > summary::-webkit-details-marker { display: none; }
+.prompt-modal-customise[open] > summary span:last-child { transform: rotate(180deg); }
+.prompt-modal-customise > summary { border-radius: 10px; }
+.prompt-modal-customise[open] > summary { border-radius: 10px 10px 0 0; }
+/* Tighter modal vertical rhythm */
+.prompt-modal-output-banner { margin-bottom: 8px; }
+.prompt-mini-brief { margin-bottom: 10px; }
+
+
+/* V100: Two-line tile title — first part (label) + second part (context) */
+.tile-preview-title { flex-direction: column; gap: 2px; }
+.tile-title-p1 { display: block; font-size: 1em; font-weight: 700; line-height: 1.15; }
+.tile-title-p2 { display: block; font-size: 0.82em; font-weight: 500; opacity: 0.88; line-height: 1.2; }
+
 </style>
 </head>
 <body>
+<a href="#app" class="skip-link" style="position:absolute;top:-40px;left:8px;padding:8px 16px;background:var(--primary);color:var(--accent);border-radius:4px;font-weight:700;z-index:9999;transition:top 0.15s;text-decoration:none;" onfocus="this.style.top='8px'" onblur="this.style.top='-40px'">Skip to content</a>
 
 <!-- V7: Skip-link for keyboard users (jumps past nav to main content) -->
 <a href="#mainContent" class="skip-link">Skip to main content</a>
@@ -1601,11 +1667,11 @@ body.wizard-open { overflow: hidden; position: fixed; width: 100%; }
         </span>
         <span class="brand-section-arrow">▾</span>
       </button>
-      <div class="brand-section-content" id="paletteContent">
-      <span class="swatch" style="background:#2c3e50"><input type="color" data-idx="0" value="#2c3e50"><span class="swatch-hex" data-hex-idx="0">#2c3e50</span></span>
-      <span class="swatch" style="background:#ecf0f1"><input type="color" data-idx="1" value="#ecf0f1"><span class="swatch-hex" data-hex-idx="1">#ecf0f1</span></span>
-      <span class="swatch" style="background:#3498db"><input type="color" data-idx="2" value="#3498db"><span class="swatch-hex" data-hex-idx="2">#3498db</span></span>
-      <span class="swatch" style="background:#ffffff"><input type="color" data-idx="3" value="#ffffff"><span class="swatch-hex" data-hex-idx="3">#ffffff</span></span>
+      <div class="brand-section-content" id="paletteContent" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:4px 0;">
+      <div style="text-align:center;"><span class="swatch" data-cidx="0" style="background:#2c3e50;display:block;" title="Click to edit" role="button" aria-label="Edit Dark colour" tabindex="0"></span><div style="font-size:9px;color:var(--text-muted);margin-top:3px;">Dark</div></div>
+      <div style="text-align:center;"><span class="swatch" data-cidx="1" style="background:#ecf0f1;display:block;" title="Click to edit" role="button" aria-label="Edit Light colour" tabindex="0"></span><div style="font-size:9px;color:var(--text-muted);margin-top:3px;">Light</div></div>
+      <div style="text-align:center;"><span class="swatch" data-cidx="2" style="background:#3498db;display:block;" title="Click to edit" role="button" aria-label="Edit Feature colour" tabindex="0"></span><div style="font-size:9px;color:var(--text-muted);margin-top:3px;">Feature</div></div>
+      <div style="text-align:center;"><span class="swatch" data-cidx="3" style="background:#ffffff;display:block;border:1px solid #ddd;" title="Click to edit" role="button" aria-label="Edit Accent colour" tabindex="0"></span><div style="font-size:9px;color:var(--text-muted);margin-top:3px;">Accent</div></div>
       </div>
     </div>
     <div class="brand-section">
@@ -3427,7 +3493,23 @@ function v5BuildBrandOverride() {
 // V5: Strip any unfilled placeholder tokens so the user never copies "[paste capsule]" or "{NAME}".
 function v5CleanPlaceholders(text) {
   if (!text) return '';
+  // V100: Resolve {GENDER_SUBJECT} token from wizard gender selection
+  // This prevents hardcoded 'a man'/'a woman' from overriding the user's identity
+  const genderSubject = (() => {
+    if (!state.gender) return 'the subject';
+    const gMap = {
+      'woman': 'a woman',
+      'female': 'a woman',
+      'man': 'a man',
+      'male': 'a man',
+      'non-binary': 'a person',
+      'custom': state.genderCustom ? state.genderCustom : 'the subject',
+    };
+    return gMap[state.gender] || 'a person';
+  })();
   return text
+    // V100: Gender token — resolves to user's selected gender presentation
+    .replace(/\{GENDER_SUBJECT\}/g, genderSubject)
     // Capsule variants
     .replace(/\[paste capsule\]/gi, state.name ? state.name : 'the subject')
     .replace(/\[capsule one-line anchor\]/gi, state.name ? state.name : 'the subject')
@@ -3450,15 +3532,183 @@ function v5CleanPlaceholders(text) {
     .replace(/\[(?:paste|insert|your)[^\]]*\]/gi, '');
 }
 
+// V100: Platform alias map — routes unlisted platforms to the closest native prompt format.
+// JSON files have: claude, chatgpt, mj, flux, imagen, firefly, leonardo, sdxl, ideogram, sora
+// Without this, gemini/grok/dalle/codex etc all get the Claude text prompt (wrong format).
+const V100_PLATFORM_ALIASES = {
+  'dalle':      'chatgpt',   // DALL·E is OpenAI — use chatgpt format
+  'codex':      'chatgpt',   // Codex via ChatGPT
+  'gemini':     'imagen',    // Google Gemini → Imagen family
+  'veo':        'imagen',    // Veo is Google video → Imagen style
+  'grok':       'chatgpt',   // Grok image gen is similar to ChatGPT
+  'perplexity': 'claude',    // Perplexity is text-based → Claude format
+  'runway':     'sora',      // Runway video → Sora still format
+  'kling':      'sora',
+  'pika':       'sora',
+  'luma':       'sora',
+  'canva':      'firefly',   // Canva Magic → Firefly style
+};
+
+
+const V100_PLATFORM_LIMITS = {
+  'mj':        { hard: 6000, sweet: 600  },
+  'dalle':     { hard: 4000, sweet: 1500 },
+  'chatgpt':   { hard: 4000, sweet: 2000 },
+  'flux':      { hard: 2048, sweet: 1000 },
+  'imagen':    { hard: 480,  sweet: 450  },
+  'gemini':    { hard: 2048, sweet: 800  },
+  'firefly':   { hard: 1024, sweet: 900  },
+  'leonardo':  { hard: 2000, sweet: 1200 },
+  'sdxl':      { hard: 1500, sweet: 600  },
+  'ideogram':  { hard: 1024, sweet: 900  },
+  'sora':      { hard: 2000, sweet: 1000 },
+  'runway':    { hard: 1024, sweet: 450  },
+  'kling':     { hard: 2500, sweet: 450  },
+  'pika':      { hard: 1000, sweet: 250  },
+  'luma':      { hard: 1024, sweet: 350  },
+  'claude':    { hard: null, sweet: 3000 },
+  'canva':     { hard: 1000, sweet: 450  },
+  'grok':      { hard: 4000, sweet: 1500 },
+};
+
+function v100CondensePrompt(p, maxChars) {
+  if (!p || p.length <= maxChars) return p;
+  var condensed = p.replace(/\n*---\s*BRAND OVERRIDE[\s\S]*?END BRAND OVERRIDE\s*---/g, '').trim();
+  condensed = condensed.replace(/\b(SUBJECT IDENTITY|GENDER PRESENTATION|REALISM MODE|ARCHETYPE BLEND|WARDROBE|VISUAL AESTHETIC|VIBE|STYLE SPECTRUM|COLOUR PALETTE|RENDER STYLE|OUTPUT TARGET|LIFE DOMAIN|NICHE OVERLAY|NICHE PALETTE BIAS):\s*/g, '').trim();
+  if (condensed.length <= maxChars) return condensed;
+  var aspectMatch = condensed.match(/\b(Aspect\s+\d+:\d+|--ar\s+[\d:]+)[^.]*\.?/);
+  var aspectStr = aspectMatch ? ' ' + aspectMatch[0].trim() : '';
+  var budget = maxChars - aspectStr.length - 3;
+  var cut = condensed.slice(0, budget);
+  var lastDot = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('.\n'));
+  condensed = (lastDot > budget * 0.6 ? cut.slice(0, lastDot + 1) : cut) + (aspectStr || '...');
+  return condensed.trim();
+}
+
+function v100WrapForPlatform(p, platformKey, scene) {
+  if (!p) return p;
+  var limitEntry = V100_PLATFORM_LIMITS[platformKey] || { hard: null, sweet: 2000 };
+  var sweetLimit = limitEntry.sweet;
+  var aspect = (scene && scene.v3 && scene.v3.aspect) || '3:4';
+  try {
+    if (typeof SIZE_TO_AR !== 'undefined' && typeof state !== 'undefined' && state.size) {
+      aspect = SIZE_TO_AR[state.size] || aspect;
+    }
+  } catch (ignore) {}
+  var dims = (scene && (scene.dimensions || (scene.v3 && scene.v3.dimensions))) || '';
+  var dimsStr = dims ? dims.split(' ')[0] : '';
+  var stripped = p.replace(/\s*Then generate hook[^.]*\./gi, '').trim();
+  switch (platformKey) {
+    case 'mj': {
+      var mj = v100CondensePrompt(stripped, sweetLimit)
+        .replace(/\bRender\s+(a|an|the)\s+/gi, '')
+        .replace(/\bCreate\s+(a|an|the)\s+/gi, '')
+        .replace(/\bGenerate\s+(a|an|the)?\s+/gi, '')
+        .trim();
+      if (!/--ar\s/.test(mj)) mj += ' --ar ' + aspect + ' --v 7 --style raw --q 2';
+      return mj;
+    }
+    case 'dalle': {
+      var dalleT = v100CondensePrompt(stripped, sweetLimit);
+      var sized = dimsStr ? dalleT + ' Image dimensions: ' + dimsStr + '.' : dalleT;
+      if (/^(photograph|a photograph)/i.test(sized)) return sized;
+      return 'Create this image using DALL-E: ' + sized;
+    }
+    case 'chatgpt': {
+      var cgT = v100CondensePrompt(stripped, sweetLimit);
+      if (/^photograph/i.test(cgT)) return cgT;
+      return 'Generate this image: ' + cgT;
+    }
+    case 'flux':
+      return v100CondensePrompt(stripped, sweetLimit);
+    case 'imagen': {
+      var img = v100CondensePrompt(stripped, 450);
+      if (!/^a (photograph|photo|image)/i.test(img)) {
+        img = 'A photograph of ' + img.replace(/^(Photograph|Photo|Image)[,.]?\s*/i, '');
+      }
+      if (img.length > 480) img = img.slice(0, 477) + '...';
+      return img;
+    }
+    case 'gemini': {
+      var gmT = v100CondensePrompt(stripped, sweetLimit);
+      return 'Generate this image: ' + gmT;
+    }
+    case 'firefly': {
+      var ff = v100CondensePrompt(stripped, 900);
+      if (ff.length > 1024) ff = ff.slice(0, 1021) + '...';
+      return ff;
+    }
+    case 'leonardo': {
+      var leo = v100CondensePrompt(stripped, sweetLimit);
+      if (!/Phoenix|Lucid|Alchemy/i.test(leo)) leo += ' [Model: Phoenix or Lucid Realism]';
+      return leo;
+    }
+    case 'sdxl':
+      return v100CondensePrompt(p, sweetLimit);
+    case 'ideogram': {
+      var ideo = v100CondensePrompt(stripped, sweetLimit);
+      if (!/No text/i.test(ideo)) ideo += ' No text or typography in the image.';
+      if (ideo.length > 1024) ideo = ideo.slice(0, 1021) + '...';
+      return ideo;
+    }
+    case 'sora': {
+      var soraT = v100CondensePrompt(stripped, sweetLimit);
+      if (!/first frame|static frame/i.test(soraT)) soraT = 'First frame only, no motion: ' + soraT;
+      return soraT;
+    }
+    case 'runway': {
+      var rw = v100CondensePrompt(stripped, 450);
+      return rw + ' Camera: slow push-in. Subtle ambient motion. Duration: 4-5 seconds.';
+    }
+    case 'kling': {
+      var kl = v100CondensePrompt(stripped, 450);
+      return kl + ' Gentle ambient motion. 5-8 second clip.';
+    }
+    case 'pika': {
+      var pikaT = v100CondensePrompt(stripped, 250);
+      return pikaT + ' Subtle motion: blink, breath, ambient. 3-4 second loop.';
+    }
+    case 'luma': {
+      var lm = v100CondensePrompt(stripped, 350);
+      return lm + ' Slow cinematic dolly. 5 second clip.';
+    }
+    case 'canva': {
+      var cv = v100CondensePrompt(stripped, sweetLimit);
+      var canvaSpec = dimsStr ? '\n\nCanvas size: ' + dimsStr + ' (' + aspect + ').' : '';
+      return cv + canvaSpec;
+    }
+    case 'grok': {
+      var gk = v100CondensePrompt(stripped, sweetLimit);
+      return 'Generate this image: ' + gk;
+    }
+    case 'claude':
+    default:
+      return p;
+  }
+}
+
 function v3GetEnhancedPrompt(scene, platformKey) {
   if (!scene) return '';
-  // Source: try platform-specific prompt, fall back to claude, then to legacy template
+  // Resolve alias
+  const resolvedKey = V100_PLATFORM_ALIASES[platformKey] || platformKey;
+  
+  // Source: try platform-specific prompt, then alias, then claude
   let p = '';
   if (scene.v3 && scene.v3.platforms) {
-    p = scene.v3.platforms[platformKey] || scene.v3.platforms.claude || '';
+    p = scene.v3.platforms[resolvedKey] || scene.v3.platforms[platformKey] || scene.v3.platforms.claude || '';
   }
   if (!p) p = scene.template || '';
   if (!p) return '';
+
+  // V100: For ChatGPT/DALL·E image generation — strip any social copy tail and ensure
+  // the prompt is pure image generation instruction (no "generate hook, caption, hashtags")
+  if (platformKey === 'chatgpt' || platformKey === 'dalle' || platformKey === 'codex') {
+    p = p.replace(/\s*Then generate hook,\s*caption[^.]*\./gi, '').trim();
+    // Ensure DALL·E gets explicit image instruction prefix if not already framed as photo
+    if (platformKey === 'dalle' && !p.toLowerCase().startsWith('photograph') && !p.toLowerCase().startsWith('generate this image')) {
+      p = 'Generate this image using DALL·E: ' + p;
+    }
+  }
 
   // 1. Replace IDENTITY CAPSULE with the actual built capsule (legacy support)
   const capsule = v3BuildIdentityCapsule();
@@ -3555,11 +3805,8 @@ function v3GetEnhancedPrompt(scene, platformKey) {
   // 8. V5: Final pass - strip any unfilled placeholders so the user copies a clean prompt
   p = v5CleanPlaceholders(p);
 
-  // 9. V5: Platform-specific suffixes for tools that don't carry their own (Midjourney needs --ar etc.)
-  if ((platformKey === 'mj' || platformKey === 'midjourney') && !/--ar\s/.test(p)) {
-    const sceneAspect = (scene.v3 && scene.v3.aspect) || (typeof SIZE_TO_AR !== 'undefined' ? SIZE_TO_AR[state.size] : '') || '3:4';
-    p += ` --ar ${sceneAspect} --style raw --v 6`;
-  }
+  // V100: Apply platform-native wrapper (condenses to limit, adds platform syntax/image trigger)
+  p = v100WrapForPlatform(p, platformKey, scene);
 
   return p.trim();
 }
@@ -4715,38 +4962,38 @@ function deriveMetadata(catKey, cat) {
 // Detects: non-magnetic name (no em-dash), missing tagline, or missing/short sub.
 // Rebuilds magnetic name from baseScene + niche, fills tagline + sub with reasonable defaults.
 const V9913_MAGNETIC_MAP = {
-  'Discovery Call': 'Booking Page Hero — Builds Instant Trust',
-  'Strategy Session': 'Strategy Session Image — Sells Premium Packages',
-  'Group Coaching': 'Cohort Photo — Makes People Want In',
-  'Workshop Delivery': 'Workshop in Action — Drives Sign-ups',
-  '1:1 Session': 'Intimate 1:1 Image — Premium Service Sell',
-  'Client Breakthrough': 'Breakthrough Moment — Powers Case Studies',
-  'Toolkit Reveal': 'Toolkit Hero — Magnetises Lead Magnets',
-  'Programme Welcome': 'Welcome Hero — Onboards New Clients Warmly',
-  'Signature Method': 'Signature Method Image — Owns Your IP',
-  'Office Hours': 'Office Hours — Opens Community Doors',
-  'Online Session': 'Online Coaching — Builds Remote Credibility',
-  'Live Event': 'Stage Hero — Establishes Speaker Authority',
-  'Retreat Day': 'Retreat Hero — Sells High-Ticket Experiences',
-  'Client Testimonial': 'Testimonial Backdrop — Builds Social Proof',
-  'Resource Library': 'Resource Hero — Anchors Member Hub',
-  'Hook Frame': 'Hook Frame — Stops the Scroll Cold',
-  'Pattern Break': 'Pattern Break — Disrupts the Feed',
-  'CTA Card': 'CTA Card — Drives the Click',
-  'Cover Thumbnail': 'Cover Thumbnail — Earns the Play',
-  'Cover Story': 'Cover Story Hero — Magazine-Grade Impact',
-  'Feature Spread': 'Feature Spread — Premium Editorial Anchor',
-  'Hero Campaign': 'Hero Campaign — One-Image Sell',
-  'Hero Product Shot': 'Hero Product Shot — Catalogue Headliner',
-  'Carousel Slide': 'Carousel Slide — Sequential Story',
-  'Carousel Cover': 'Carousel Cover — Opens the Swipe',
-  'Carousel Closer': 'Carousel Closer — Drives Final Action',
-  'Carousel Mid-Slide': 'Carousel Mid-Slide — Holds the Swipe',
-  'Quote Card': 'Quote Card — Save-and-Share Asset',
-  'BTS Frame': 'BTS Frame — Builds Authentic Connection',
-  'Whitepaper Cover': 'Whitepaper Cover — Establishes Expert Authority',
-  'Boardroom Brief': 'Boardroom Hero — C-Suite Credibility',
-  'Methodology Diagram': 'Methodology Image — Showcases Your IP',
+  'Discovery Call': 'Booking Page Hero : Builds Instant Trust',
+  'Strategy Session': 'Strategy Session Image : Sells Premium Packages',
+  'Group Coaching': 'Cohort Photo : Makes People Want In',
+  'Workshop Delivery': 'Workshop in Action : Drives Sign-ups',
+  '1:1 Session': 'Intimate 1:1 Image : Premium Service Sell',
+  'Client Breakthrough': 'Breakthrough Moment : Powers Case Studies',
+  'Toolkit Reveal': 'Toolkit Hero : Magnetises Lead Magnets',
+  'Programme Welcome': 'Welcome Hero : Onboards New Clients Warmly',
+  'Signature Method': 'Signature Method Image : Owns Your IP',
+  'Office Hours': 'Office Hours : Opens Community Doors',
+  'Online Session': 'Online Coaching : Builds Remote Credibility',
+  'Live Event': 'Stage Hero : Establishes Speaker Authority',
+  'Retreat Day': 'Retreat Hero : Sells High-Ticket Experiences',
+  'Client Testimonial': 'Testimonial Backdrop : Builds Social Proof',
+  'Resource Library': 'Resource Hero : Anchors Member Hub',
+  'Hook Frame': 'Hook Frame : Stops the Scroll Cold',
+  'Pattern Break': 'Pattern Break : Disrupts the Feed',
+  'CTA Card': 'CTA Card : Drives the Click',
+  'Cover Thumbnail': 'Cover Thumbnail : Earns the Play',
+  'Cover Story': 'Cover Story Hero : Magazine-Grade Impact',
+  'Feature Spread': 'Feature Spread : Premium Editorial Anchor',
+  'Hero Campaign': 'Hero Campaign : One-Image Sell',
+  'Hero Product Shot': 'Hero Product Shot : Catalogue Headliner',
+  'Carousel Slide': 'Carousel Slide : Sequential Story',
+  'Carousel Cover': 'Carousel Cover : Opens the Swipe',
+  'Carousel Closer': 'Carousel Closer : Drives Final Action',
+  'Carousel Mid-Slide': 'Carousel Mid-Slide : Holds the Swipe',
+  'Quote Card': 'Quote Card : Save-and-Share Asset',
+  'BTS Frame': 'BTS Frame : Builds Authentic Connection',
+  'Whitepaper Cover': 'Whitepaper Cover : Establishes Expert Authority',
+  'Boardroom Brief': 'Boardroom Hero : C-Suite Credibility',
+  'Methodology Diagram': 'Methodology Image : Showcases Your IP',
 };
 
 function v9913SelfHealScene(s) {
@@ -4754,36 +5001,45 @@ function v9913SelfHealScene(s) {
   const name = s.name || '';
   const niche = s.catLabel || '';
   const baseScene = s.baseScene || s.base_scene || '';
-  
-  // Detect stale: name doesn't contain em-dash AND niche isn't already in name suffix style
-  const isStale = !name.includes('—') && !name.includes('--') && !name.includes(': ');
-  
+
+  // FIX 1: Strip em-dashes from B (name) and C (tagline) — user requested no em-dashes in spreadsheet
+  if (s.name && s.name.includes('—')) {
+    s.name = s.name.replace(/\s*—\s*/g, ': ').replace(/:\s*:/g, ':');
+  }
+  if (s.tagline && s.tagline.includes('—')) {
+    s.tagline = s.tagline.replace(/\s*—\s*/g, ' · ').replace(/\s{2,}/g, ' ').trim();
+  }
+
+  // Detect stale: name doesn't have "X: Y for Niche" format AND isn't already magnetic
+  const isAlreadyGood = name.includes(': ') || name.includes('for ') || name.length > 30;
+  const isStale = !isAlreadyGood;
+
   if (isStale && baseScene && niche) {
-    // Try the magnetic map first
     const magnetic = V9913_MAGNETIC_MAP[baseScene];
     if (magnetic) {
-      s.name = `${magnetic} for ${niche}`;
+      s.name = `${magnetic.replace(/\s*—\s*/g, ': ')} for ${niche}`;
     } else if (baseScene) {
-      // Fallback: use base scene as-is with niche
-      s.name = `${baseScene} — Brand Hero for ${niche}`;
+      s.name = `${baseScene}: Brand Hero for ${niche}`;
     }
   }
-  
-  // Heal tagline: if it equals "name for niche" pattern (the bad fallback), rebuild from asset/businessMoment
-  if (!s.tagline || s.tagline === `${name} for ${niche}` || s.tagline === `${name} for ${niche}.`) {
+
+  // Heal tagline ONLY if truly empty or equals the bad "name for niche" fallback
+  // Never overwrite a tagline that has real content (length > 10)
+  const taglineBad = !s.tagline || s.tagline === `${name} for ${niche}` || s.tagline === name;
+  if (taglineBad) {
     const assetType = s.asset || s.assetCategory || baseScene || 'Brand Asset';
     s.tagline = String(assetType).replace(/^Stock\//, '').replace(/\//g, ' · ');
   }
-  
-  // Heal sub: if missing/empty, build a sensible description
-  if (!s.sub || s.sub.length < 30) {
+
+  // Heal sub ONLY if genuinely missing (< 20 chars) — never overwrite real enhanced descriptions
+  if (!s.sub || s.sub.trim().length < 20) {
     if (baseScene && niche) {
       s.sub = `The ${baseScene.toLowerCase()} image for ${niche.toLowerCase()}. Designed to capture attention and drive your specific business outcome.`;
     } else {
       s.sub = `Brand-aligned visual asset designed for your specific use case and audience.`;
     }
   }
-  
+
   return s;
 }
 
@@ -7392,7 +7648,16 @@ function renderTilesList(wrap, scenes) {
             ${(scene.dimensions || scene.recommendedDimensions) ? `<span class="tile-px-badge" ${aspectStyleAttr} title="Native pixel resolution">${(scene.dimensions || scene.recommendedDimensions || '').replace(/\s*\(.*\)/, '').trim()}</span>` : ''}
             <button class="tile-save-btn ${isSaved ? 'saved' : ''}" data-save="${scene.id}" aria-label="${isSaved ? 'Saved' : 'Save'}" ${saveBtnStyleAttr}>${isSaved ? '★' : '☆'}</button>
           </div>
-          <h3 class="tile-preview-title">${displayName}</h3>
+          <h3 class="tile-preview-title">
+            ${(() => {
+              const n = displayName || '';
+              const ci = n.indexOf(':');
+              if (ci > 0 && ci < n.length - 1) {
+                return `<span class="tile-title-p1">${n.slice(0, ci + 1)}</span><span class="tile-title-p2">${n.slice(ci + 1).trim()}</span>`;
+              }
+              return n;
+            })()}
+          </h3>
 
         </div>
       </div>
@@ -7484,7 +7749,8 @@ function showSceneDetails(scene) {
     'sora':'sora', 'runway':'runway', 'kling':'kling', 'pika':'pika', 'luma':'luma', 'veo':'veo',
     'canva':'canva'
   };
-  const defaultPlatform = platformMap[fmt] || 'claude';
+  // V100: Use last-selected platform if user has chosen one in this session
+  const defaultPlatform = state.lastModalPlatform || platformMap[fmt] || 'claude';
 
   const getPromptText = (pk) => v94AugmentPrompt(v3GetEnhancedPrompt(scene, pk), scene);
 
@@ -7501,8 +7767,17 @@ function showSceneDetails(scene) {
   const sceneCat = state.lib[scene.category || scene.cat] || {};
   const summary = scene.sub || '';
   const aolPill = sceneCat.aol ? `<span class="aol-pill">${sceneCat.aol}</span>` : '';
-  // Wizard-completion check - warn if user hasn't filled out the wizard so they don't get a generic prompt
-  const wizardIncomplete = !state.name && !state.business && (!state.archetypes || state.archetypes.length === 0);
+  // Wizard-completion check: detect exactly what is missing
+  const missingFields = [];
+  if (!state.name) missingFields.push('your name');
+  if (!state.archetypes || state.archetypes.length === 0) missingFields.push('your archetype');
+  if (!state.colors || state.colors.every(c => ['#2c3e50','#ecf0f1','#3498db','#ffffff'].includes(c ? c.toLowerCase() : ''))) missingFields.push('brand colours');
+  const wizardIncomplete = missingFields.length >= 2;
+  // Build a summary of what IS filled in (for the completed state)
+  const wizardFilledParts = [];
+  if (state.name) wizardFilledParts.push(state.name);
+  if (state.business) wizardFilledParts.push(state.business);
+  if (state.archetypes && state.archetypes.length) wizardFilledParts.push(state.archetypes.map(function(a){return a.charAt(0).toUpperCase()+a.slice(1);}).join(' / '));
 
   modal.innerHTML = `
     <div class="prompt-modal-box">
@@ -7520,8 +7795,10 @@ function showSceneDetails(scene) {
       </div>
 
       ${wizardIncomplete ? `<div style="padding:12px 16px;margin:0 0 16px;background:rgba(196,121,0,0.08);border-left:4px solid #c47900;border-radius:6px;font-size:13px;color:var(--text);">
-        <strong>⚠ Heads up:</strong> Your wizard isn't complete - the prompt below will be missing your subject identity, archetype voice, and brand context.
-        <button id="reopenWizardFromModal" style="margin-left:6px;background:none;border:none;color:var(--accent-dark);font-weight:700;cursor:pointer;text-decoration:underline;font-size:13px;">Open wizard →</button>
+        <strong>⚠ Personalise this prompt:</strong> Still missing ${missingFields.join(', ')}. Your prompt will be generic until the wizard is complete.
+        <button id="reopenWizardFromModal" style="margin-left:8px;padding:3px 10px;background:var(--accent);color:var(--primary);border:none;border-radius:5px;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;">Complete wizard →</button>
+      </div>` : wizardFilledParts.length ? `<div style="padding:8px 14px;margin:0 0 12px;background:rgba(19,38,32,0.04);border-left:3px solid var(--primary);border-radius:6px;font-size:12px;color:var(--text-muted);">
+        ✓ Personalised for <strong style="color:var(--primary)">${wizardFilledParts.join(' · ')}</strong>
       </div>` : ''}
 
       ${v6BuildMiniBrief(scene, sceneCat)}
@@ -7568,54 +7845,146 @@ function showSceneDetails(scene) {
             <select class="output-banner-select" id="modalSizeSelect" style="background-image:none;padding-right:32px;">
               <option value="auto" ${(state.size==='auto'||!state.size) ? 'selected':''}>${v.dimensions || 'Native'} ${v.aspect ? '· ' + v.aspect : ''} (use prompt default)</option>
               <optgroup label="Instagram">
-                <option value="instagram-square" ${state.size==='instagram-square'?'selected':''}>Instagram square 1080x1080</option>
-                <option value="instagram-portrait" ${state.size==='instagram-portrait'?'selected':''}>Instagram portrait 1080x1350</option>
-                <option value="instagram-story" ${state.size==='instagram-story'?'selected':''}>Instagram story / reel 1080x1920</option>
-                <option value="instagram-landscape" ${state.size==='instagram-landscape'?'selected':''}>Instagram landscape 1080x566</option>
-              </optgroup>
-              <optgroup label="LinkedIn">
-                <option value="li-post" ${state.size==='li-post'?'selected':''}>LinkedIn post 1200x1200</option>
-                <option value="li-banner" ${state.size==='li-banner'?'selected':''}>LinkedIn banner 1584x396</option>
-                <option value="li-article" ${state.size==='li-article'?'selected':''}>LinkedIn article 1200x627</option>
-                <option value="li-document" ${state.size==='li-document'?'selected':''}>LinkedIn document 1080x1080</option>
+                <option value="instagram-square" ${state.size==='instagram-square'?'selected':''}>IG Square (1080×1080)</option>
+                <option value="instagram-portrait" ${state.size==='instagram-portrait'?'selected':''}>IG Portrait (1080×1350)</option>
+                <option value="instagram-story" ${state.size==='instagram-story'?'selected':''}>IG Story / Reel (1080×1920)</option>
+                <option value="instagram-landscape" ${state.size==='instagram-landscape'?'selected':''}>IG Landscape (1080×566)</option>
+                <option value="instagram-carousel" ${state.size==='instagram-carousel'?'selected':''}>IG Carousel (1080×1080)</option>
               </optgroup>
               <optgroup label="Facebook">
-                <option value="fb-post" ${state.size==='fb-post'?'selected':''}>Facebook post 1200x630</option>
-                <option value="fb-cover" ${state.size==='fb-cover'?'selected':''}>Facebook cover 1640x924</option>
-                <option value="fb-story" ${state.size==='fb-story'?'selected':''}>Facebook story 1080x1920</option>
+                <option value="fb-post" ${state.size==='fb-post'?'selected':''}>FB Post (1200×630)</option>
+                <option value="fb-cover" ${state.size==='fb-cover'?'selected':''}>FB Cover (1640×924)</option>
+                <option value="fb-story" ${state.size==='fb-story'?'selected':''}>FB Story (1080×1920)</option>
+                <option value="fb-event-cover" ${state.size==='fb-event-cover'?'selected':''}>FB Event Cover (1920×1005)</option>
+                <option value="fb-group-cover" ${state.size==='fb-group-cover'?'selected':''}>FB Group Cover (1640×856)</option>
               </optgroup>
-              <optgroup label="TikTok / YouTube / Pinterest">
-                <option value="tiktok-video" ${state.size==='tiktok-video'?'selected':''}>TikTok video 1080x1920</option>
-                <option value="youtube-thumbnail" ${state.size==='youtube-thumbnail'?'selected':''}>YouTube thumbnail 1280x720</option>
-                <option value="youtube-shorts" ${state.size==='youtube-shorts'?'selected':''}>YouTube Shorts 1080x1920</option>
-                <option value="pinterest-pin" ${state.size==='pinterest-pin'?'selected':''}>Pinterest standard pin 1000x1500</option>
-                <option value="pinterest-idea" ${state.size==='pinterest-idea'?'selected':''}>Pinterest idea pin 1080x1920</option>
+              <optgroup label="LinkedIn">
+                <option value="li-post" ${state.size==='li-post'?'selected':''}>LinkedIn Post (1200×1200)</option>
+                <option value="li-banner" ${state.size==='li-banner'?'selected':''}>LinkedIn Banner (1584×396)</option>
+                <option value="li-article" ${state.size==='li-article'?'selected':''}>Article Header (1200×627)</option>
+                <option value="li-document" ${state.size==='li-document'?'selected':''}>Document Slide (1080×1080)</option>
+                <option value="li-newsletter" ${state.size==='li-newsletter'?'selected':''}>Newsletter Header (1200×627)</option>
               </optgroup>
-              <optgroup label="Twitter / X">
-                <option value="twitter-post" ${state.size==='twitter-post'?'selected':''}>Twitter/X post 1600x900</option>
-                <option value="twitter-header" ${state.size==='twitter-header'?'selected':''}>Twitter/X header 1500x500</option>
+              <optgroup label="Pinterest">
+                <option value="pin-standard" ${state.size==='pin-standard'?'selected':''}>Standard Pin (1000×1500)</option>
+                <option value="pin-square" ${state.size==='pin-square'?'selected':''}>Square Pin (1000×1000)</option>
+                <option value="pin-idea" ${state.size==='pin-idea'?'selected':''}>Idea Pin (1080×1920)</option>
+                <option value="pin-board-cover" ${state.size==='pin-board-cover'?'selected':''}>Board Cover (600×600)</option>
               </optgroup>
-              <optgroup label="Website / Blog">
-                <option value="web-hero" ${state.size==='web-hero'?'selected':''}>Web hero 1920x1080</option>
-                <option value="blog-cover" ${state.size==='blog-cover'?'selected':''}>Blog cover 1200x630</option>
+              <optgroup label="YouTube">
+                <option value="yt-thumb" ${state.size==='yt-thumb'?'selected':''}>Thumbnail (1280×720)</option>
+                <option value="yt-banner" ${state.size==='yt-banner'?'selected':''}>Channel Banner (2560×1440)</option>
+                <option value="yt-shorts" ${state.size==='yt-shorts'?'selected':''}>Shorts (1080×1920)</option>
+                <option value="yt-end-screen" ${state.size==='yt-end-screen'?'selected':''}>End Screen (1280×720)</option>
               </optgroup>
-              <optgroup label="Print / Standard">
-                <option value="print-poster" ${state.size==='print-poster'?'selected':''}>Print poster 2480x3508 (A4 portrait)</option>
-                <option value="print-landscape" ${state.size==='print-landscape'?'selected':''}>Print landscape 3508x2480 (A4 landscape)</option>
-                <option value="square-1k" ${state.size==='square-1k'?'selected':''}>Square 1024x1024</option>
-                <option value="square-2k" ${state.size==='square-2k'?'selected':''}>Square 2048x2048</option>
+              <optgroup label="TikTok">
+                <option value="tt-video" ${state.size==='tt-video'?'selected':''}>TikTok (1080×1920)</option>
+                <option value="tt-cover" ${state.size==='tt-cover'?'selected':''}>Cover Image (1080×1920)</option>
+                <option value="tt-profile" ${state.size==='tt-profile'?'selected':''}>Profile Photo (200×200)</option>
+              </optgroup>
+              <optgroup label="X / Twitter">
+                <option value="tw-post" ${state.size==='tw-post'?'selected':''}>Post Image (1600×900)</option>
+                <option value="tw-header" ${state.size==='tw-header'?'selected':''}>Header (1500×500)</option>
+                <option value="tw-card" ${state.size==='tw-card'?'selected':''}>Twitter Card (1200×628)</option>
+              </optgroup>
+              <optgroup label="Skool Community">
+                <option value="skool-cover" ${state.size==='skool-cover'?'selected':''}>Skool Cover (1584×396)</option>
+                <option value="skool-post" ${state.size==='skool-post'?'selected':''}>Skool Post (1080×1080)</option>
+                <option value="skool-classroom-thumb" ${state.size==='skool-classroom-thumb'?'selected':''}>Classroom Thumb (1280×720)</option>
+                <option value="skool-classroom-cover" ${state.size==='skool-classroom-cover'?'selected':''}>Classroom Cover (1920×1080)</option>
+                <option value="skool-event-cover" ${state.size==='skool-event-cover'?'selected':''}>Event Cover (1920×1080)</option>
+                <option value="skool-profile" ${state.size==='skool-profile'?'selected':''}>Profile Photo (400×400)</option>
+              </optgroup>
+              <optgroup label="Circle / Mighty Networks">
+                <option value="circle-cover" ${state.size==='circle-cover'?'selected':''}>Circle Cover (1200×300)</option>
+                <option value="circle-post" ${state.size==='circle-post'?'selected':''}>Circle Post (1080×1080)</option>
+                <option value="mighty-cover" ${state.size==='mighty-cover'?'selected':''}>Mighty Cover (2400×1300)</option>
+                <option value="mighty-thumb" ${state.size==='mighty-thumb'?'selected':''}>Mighty Thumb (1280×720)</option>
+              </optgroup>
+              <optgroup label="Discord / Slack">
+                <option value="discord-banner" ${state.size==='discord-banner'?'selected':''}>Discord Banner (960×540)</option>
+                <option value="discord-server-icon" ${state.size==='discord-server-icon'?'selected':''}>Discord Server Icon (512×512)</option>
+                <option value="slack-banner" ${state.size==='slack-banner'?'selected':''}>Slack Banner (1900×500)</option>
+              </optgroup>
+              <optgroup label="Course Platforms">
+                <option value="thinkific-course" ${state.size==='thinkific-course'?'selected':''}>Thinkific Course Card (750×422)</option>
+                <option value="teachable-course" ${state.size==='teachable-course'?'selected':''}>Teachable Course Image (1280×720)</option>
+                <option value="kajabi-thumb" ${state.size==='kajabi-thumb'?'selected':''}>Kajabi Thumbnail (1024×576)</option>
+                <option value="podia-cover" ${state.size==='podia-cover'?'selected':''}>Podia Course Cover (1280×720)</option>
+                <option value="udemy-thumb" ${state.size==='udemy-thumb'?'selected':''}>Udemy Thumbnail (750×422)</option>
+              </optgroup>
+              <optgroup label="Newsletter Platforms">
+                <option value="substack-header" ${state.size==='substack-header'?'selected':''}>Substack Header (1456×180)</option>
+                <option value="substack-post" ${state.size==='substack-post'?'selected':''}>Substack Post Image (1280×720)</option>
+                <option value="substack-podcast" ${state.size==='substack-podcast'?'selected':''}>Substack Podcast (3000×3000)</option>
+                <option value="beehiiv-header" ${state.size==='beehiiv-header'?'selected':''}>Beehiiv Header (1200×630)</option>
+                <option value="beehiiv-thumb" ${state.size==='beehiiv-thumb'?'selected':''}>Beehiiv Thumbnail (1200×675)</option>
+                <option value="medium-feature" ${state.size==='medium-feature'?'selected':''}>Medium Feature (1500×844)</option>
+                <option value="ghost-feature" ${state.size==='ghost-feature'?'selected':''}>Ghost Feature (1200×630)</option>
+              </optgroup>
+              <optgroup label="Headshots & Branding">
+                <option value="headshot-square" ${state.size==='headshot-square'?'selected':''}>Headshot Square (1024×1024)</option>
+                <option value="headshot-portrait" ${state.size==='headshot-portrait'?'selected':''}>Headshot Portrait (1024×1280)</option>
+                <option value="profile-photo" ${state.size==='profile-photo'?'selected':''}>Profile Photo (800×800)</option>
+                <option value="speaker-headshot" ${state.size==='speaker-headshot'?'selected':''}>Speaker Headshot (1500×2100)</option>
+                <option value="about-page" ${state.size==='about-page'?'selected':''}>About Page Hero (1920×1080)</option>
+              </optgroup>
+              <optgroup label="Web & Blog">
+                <option value="hero-banner" ${state.size==='hero-banner'?'selected':''}>Website Hero (1920×1080)</option>
+                <option value="blog-feature" ${state.size==='blog-feature'?'selected':''}>Blog Feature (1200×800)</option>
+                <option value="blog-thumb" ${state.size==='blog-thumb'?'selected':''}>Blog Thumbnail (600×400)</option>
+                <option value="podcast-cover" ${state.size==='podcast-cover'?'selected':''}>Podcast Cover Art (3000×3000)</option>
+                <option value="podcast-episode" ${state.size==='podcast-episode'?'selected':''}>Podcast Episode Art (1400×1400)</option>
+                <option value="webinar-cover" ${state.size==='webinar-cover'?'selected':''}>Webinar Cover (1920×1080)</option>
+                <option value="landing-page" ${state.size==='landing-page'?'selected':''}>Landing Page Hero (1920×1080)</option>
+              </optgroup>
+              <optgroup label="Email Marketing">
+                <option value="email-header" ${state.size==='email-header'?'selected':''}>Email Header (600×300)</option>
+                <option value="email-banner" ${state.size==='email-banner'?'selected':''}>Email Banner (600×200)</option>
+                <option value="email-feature" ${state.size==='email-feature'?'selected':''}>Email Feature (600×400)</option>
+                <option value="welcome-email" ${state.size==='welcome-email'?'selected':''}>Welcome Email Hero (600×600)</option>
+              </optgroup>
+              <optgroup label="Print & Marketing">
+                <option value="postcard" ${state.size==='postcard'?'selected':''}>Postcard (1200×1800)</option>
+                <option value="flyer-a4" ${state.size==='flyer-a4'?'selected':''}>Flyer A4 (2480×3508)</option>
+                <option value="business-card" ${state.size==='business-card'?'selected':''}>Business Card (1050×600)</option>
+                <option value="lead-magnet" ${state.size==='lead-magnet'?'selected':''}>Lead Magnet Cover (1200×1600)</option>
+                <option value="ebook-cover" ${state.size==='ebook-cover'?'selected':''}>Ebook Cover (1600×2560)</option>
+              </optgroup>
+              <optgroup label="Aspect Ratios">
+                <option value="3:4" ${state.size==='3:4'?'selected':''}>Default 3:4</option>
+                <option value="1:1" ${state.size==='1:1'?'selected':''}>Square 1:1</option>
+                <option value="16:9" ${state.size==='16:9'?'selected':''}>Wide 16:9</option>
+                <option value="9:16" ${state.size==='9:16'?'selected':''}>Tall 9:16</option>
+                <option value="4:5" ${state.size==='4:5'?'selected':''}>Portrait 4:5</option>
+                <option value="2:3" ${state.size==='2:3'?'selected':''}>Portrait 2:3</option>
               </optgroup>
             </select>
           </div>
         </div>
       </div>
 
-      <div class="prompt-modal-customise">
-        <div class="prompt-modal-customise-header">
-          <span class="prompt-modal-customise-label">Customise this prompt</span>
+      <div class="prompt-modal-prompt-block" id="promptOutputBlock">
+        <div class="prompt-modal-prompt-toolbar">
+          <span class="prompt-toolbar-label">Generated for <strong id="promptToolbarPlatformName">${AI_PLATFORM_NAMES[defaultPlatform]}</strong></span>
+          <span class="prompt-toolbar-counter" id="promptToolbarCounter">0 chars</span>
         </div>
-        
-        <div class="prompt-customise-row">
+        <pre class="prompt-modal-prompt" id="promptModalPrompt" style="min-height:0;">Loading prompt…</pre>
+        <div class="prompt-modal-prompt-actions">
+          <button class="prompt-modal-action primary" id="promptModalCopyOpen">📋 Copy &amp; Open <span id="promptModalPlatformLabel">${AI_PLATFORM_NAMES[defaultPlatform]}</span></button>
+          <button class="prompt-modal-action" id="promptModalCopy" data-i18n="modal.copyonly">Copy only</button>
+          <button class="prompt-modal-action" id="promptModalRead" data-i18n="modal.read">Read aloud</button>
+        </div>
+      </div>
+
+
+      <details class="prompt-modal-customise" id="promptCustomiseDetails" style="margin-bottom:10px;">
+        <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;user-select:none;" aria-expanded="false">
+          <span class="prompt-modal-customise-label" style="font-size:11px;font-weight:700;color:var(--accent-dark);text-transform:uppercase;letter-spacing:0.08em;">Customise this prompt</span>
+          <span style="font-size:11px;color:var(--text-muted);">&#9660; expand</span>
+        </summary>
+        <div style="padding:0 14px 12px;">
+<div class="prompt-customise-row">
           <label class="prompt-customise-field-label" for="promptCustomText">Specific text or words to include</label>
           <textarea id="promptCustomText" class="prompt-customise-textarea" placeholder="e.g. 'Module 3: The Authority Framework' or 'Live this Friday at 2pm'" rows="2"></textarea>
           <div class="prompt-customise-hint">If you want specific text rendered into the image (titles, dates, module names), enter it here</div>
@@ -7624,7 +7993,7 @@ function showSceneDetails(scene) {
         <div class="prompt-customise-row">
           <label class="prompt-customise-field-label" for="promptDesignRequests">Do you have any other design requests?</label>
           <textarea id="promptDesignRequests" class="prompt-customise-textarea" placeholder="e.g. 'Add a soft glow around the subject' or 'Make it feel more cinematic' or 'Include a copy of my book on the desk'" rows="2"></textarea>
-          <div class="prompt-customise-hint">Anything else you want in the image? Mood, props, framing, colour shifts, references — we add it to the prompt.</div>
+          <div class="prompt-customise-hint">Anything else you want in the image? Mood, props, framing, colour shifts, references. We add it to the prompt.</div>
         </div>
         
         <div class="prompt-customise-row">
@@ -7648,19 +8017,8 @@ function showSceneDetails(scene) {
           <div class="prompt-customise-hint" data-i18n="modal.designnotes.hint" style="display:none;" id="promptDesignNotesHint">These notes are injected directly into the prompt as authoritative direction the AI must follow.</div>
         </div>
       </div>
-      
-      <div class="prompt-modal-prompt-block">
-        <div class="prompt-modal-prompt-toolbar">
-          <span class="prompt-toolbar-label">Generated for <strong id="promptToolbarPlatformName">${AI_PLATFORM_NAMES[defaultPlatform]}</strong></span>
-          <span class="prompt-toolbar-counter" id="promptToolbarCounter">0 chars</span>
         </div>
-        <pre class="prompt-modal-prompt" id="promptModalPrompt">${getPromptText(defaultPlatform)}</pre>
-        <div class="prompt-modal-prompt-actions">
-          <button class="prompt-modal-action primary" id="promptModalCopyOpen">📋 Copy & Open <span id="promptModalPlatformLabel">${AI_PLATFORM_NAMES[defaultPlatform]}</span></button>
-          <button class="prompt-modal-action" id="promptModalCopy" data-i18n="modal.copyonly">Copy only</button>
-          <button class="prompt-modal-action" id="promptModalRead" data-i18n="modal.read">Read aloud</button>
-        </div>
-      </div>
+      </details>
 
       ${v.business_moment ? `<div class="prompt-modal-spec-grid">
         <div class="spec-block"><div class="spec-label">Business moment</div><div class="spec-value">${v.business_moment}</div></div>
@@ -7707,18 +8065,58 @@ function showSceneDetails(scene) {
     updatePromptDisplay(currentPlatform);
   });
 
+  // V100: Fire immediately (synchronous) and also after a tick as safety net
+  // This ensures the prompt fills in even if v94WireModalControls callback delays
+  updatePromptDisplay(currentPlatform);
+  setTimeout(() => updatePromptDisplay(currentPlatform), 80);
+
   function updatePromptDisplay(pk) {
     currentPlatform = pk;
-    const text = getPromptText(pk);
-    promptEl.textContent = text;
+    let text = '';
+    try {
+      // Try full enhanced prompt first
+      text = getPromptText(pk) || '';
+    } catch(e) {
+      text = '';
+    }
+    // Fallback chain: template → generic message
+    if (!text) {
+      try {
+        // Direct template fallback — always has content after fetchScene self-heal
+        const fallbackScene = scene;
+        const platforms = fallbackScene.v3 && fallbackScene.v3.platforms;
+        if (platforms) {
+          const resolvedKey = (typeof V100_PLATFORM_ALIASES !== 'undefined' && V100_PLATFORM_ALIASES[pk]) || pk;
+          text = platforms[resolvedKey] || platforms[pk] || platforms.claude || '';
+        }
+        if (!text) text = fallbackScene.template || '';
+        // Apply basic placeholder cleaning if we have a name
+        if (text && fallbackScene.name) {
+          text = text.replace(/\[paste capsule\]/gi, fallbackScene.name || 'the subject');
+          text = text.replace(/\{NAME\}/g, fallbackScene.name || 'the subject');
+          text = text.replace(/\{GENDER_SUBJECT\}/g, 'the subject');
+        }
+      } catch(e2) { text = ''; }
+    }
+    if (!text) {
+      promptEl.setAttribute('data-loading', 'true');
+      promptEl.textContent = 'Loading prompt…';
+    } else {
+      promptEl.removeAttribute('data-loading');
+      promptEl.textContent = text;
+    }
     if (platformLabel) platformLabel.textContent = AI_PLATFORM_NAMES[pk];
     if (toolbarName) toolbarName.textContent = AI_PLATFORM_NAMES[pk];
-    if (toolbarCounter) toolbarCounter.textContent = text.length.toLocaleString() + ' chars';
+    const charCount = text ? text.length : 0;
+    if (toolbarCounter) toolbarCounter.textContent = charCount.toLocaleString() + ' chars';
     promptEl.classList.add('prompt-just-changed');
     setTimeout(() => promptEl.classList.remove('prompt-just-changed'), 600);
   }
   if (toolbarCounter) toolbarCounter.textContent = promptEl.textContent.length.toLocaleString() + ' chars';
-  if (platformSelect) platformSelect.onchange = (e) => updatePromptDisplay(e.target.value);
+  if (platformSelect) platformSelect.onchange = (e) => {
+    state.lastModalPlatform = e.target.value;  // V100: persist across modal opens
+    updatePromptDisplay(e.target.value);
+  };
 
   // V99: Modal size dropdown — change resolution on the fly
   const modalSizeSelect = modal.querySelector('#modalSizeSelect');
@@ -8520,28 +8918,61 @@ async function initApp() {
   // initialize off
   applyPaletteFormat('off');
   
-  document.querySelectorAll('.brand-bar .swatch input').forEach(input => {
-    input.oninput = (e) => {
-      const i = parseInt(e.target.dataset.idx);
-      state.colors[i] = e.target.value;
-      e.target.parentElement.style.background = e.target.value;
-      // V99: Update the hex code label in the currently-active format (off/hex/rgb)
-      const hexLabel = e.target.parentElement.querySelector('.swatch-hex');
-      if (hexLabel) {
-        hexLabel.dataset.colorRaw = e.target.value;
-        const fmt = state._paletteFormat || 'off';
-        if (fmt === 'hex') hexLabel.textContent = String(e.target.value).toLowerCase();
-        else if (fmt === 'rgb') {
-          const h = String(e.target.value).replace('#', '');
-          if (h.length === 6) {
-            const r = parseInt(h.substring(0,2), 16);
-            const g = parseInt(h.substring(2,4), 16);
-            const b = parseInt(h.substring(4,6), 16);
-            hexLabel.textContent = `${r}, ${g}, ${b}`;
-          }
-        }
-      }
-    };
+  // V100: Colour picker popup — custom HEX + RGB + wheel
+  function openColourPopup(swatchEl, colIdx) {
+    const cur = state.colors[colIdx] || '#000000';
+    const labels = ['Dark', 'Light', 'Feature', 'Accent'];
+    const label = labels[colIdx] || 'Colour ' + (colIdx+1);
+    document.querySelector('.cpop-overlay')?.remove();
+    const ov = document.createElement('div');
+    ov.className = 'cpop-overlay';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-label', 'Edit ' + label + ' colour');
+    ov.innerHTML = `<div class="cpop-box">
+      <div class="cpop-title">Edit ${label} colour</div>
+      <div class="cpop-preview" id="cpPrev" style="background:${cur}"></div>
+      <input type="color" class="cpop-wheel" id="cpWheel" value="${cur}" aria-label="Colour wheel">
+      <div class="cpop-field"><label class="cpop-label" for="cpHex">HEX</label>
+        <input class="cpop-input" id="cpHex" type="text" value="${cur}" maxlength="7" autocomplete="off" aria-label="HEX colour code"></div>
+      <div class="cpop-field"><label class="cpop-label" for="cpRgb">RGB</label>
+        <input class="cpop-input" id="cpRgb" type="text" placeholder="26, 43, 60" autocomplete="off" aria-label="RGB colour values"></div>
+      <div class="cpop-actions">
+        <button class="cpop-btn cancel" id="cpCancel" aria-label="Cancel">Cancel</button>
+        <button class="cpop-btn primary" id="cpApply" aria-label="Apply colour">Apply</button>
+      </div></div>`;
+    document.body.appendChild(ov);
+    const prev = ov.querySelector('#cpPrev');
+    const hex = ov.querySelector('#cpHex');
+    const rgb = ov.querySelector('#cpRgb');
+    const wheel = ov.querySelector('#cpWheel');
+    let wh = cur;
+    function h2r(h) { const v = h.replace('#',''); return [parseInt(v.slice(0,2),16),parseInt(v.slice(2,4),16),parseInt(v.slice(4,6),16)]; }
+    function r2h(r,g,b) { return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,~~v)).toString(16).padStart(2,'0')).join(''); }
+    const [ri,gi,bi] = h2r(cur); rgb.value = ri+', '+gi+', '+bi;
+    function fromHex(v) { if(!/^#[0-9a-fA-F]{6}$/.test(v)) return; wh=v; prev.style.background=v; wheel.value=v; const [r2,g2,b2]=h2r(v); rgb.value=r2+', '+g2+', '+b2; }
+    function fromRgb(v) { const p=v.split(',').map(s=>parseInt(s.trim())); if(p.length!==3||p.some(isNaN)) return; wh=r2h(...p); prev.style.background=wh; hex.value=wh; wheel.value=wh; }
+    hex.addEventListener('input', e => fromHex(e.target.value.startsWith('#') ? e.target.value : '#'+e.target.value));
+    rgb.addEventListener('input', e => fromRgb(e.target.value));
+    wheel.addEventListener('input', e => { hex.value=e.target.value; fromHex(e.target.value); });
+    function apply() {
+      if(!/^#[0-9a-fA-F]{6}$/.test(wh)) return;
+      state.colors[colIdx] = wh;
+      swatchEl.style.background = wh;
+      if(typeof v81AutoSaveSession === 'function') v81AutoSaveSession();
+      ov.remove();
+    }
+    ov.querySelector('#cpApply').addEventListener('click', apply);
+    ov.querySelector('#cpCancel').addEventListener('click', () => ov.remove());
+    ov.addEventListener('click', e => { if(e.target===ov) ov.remove(); });
+    // Keyboard: Enter applies, Escape cancels
+    ov.addEventListener('keydown', e => { if(e.key==='Enter') apply(); if(e.key==='Escape') ov.remove(); });
+    hex.focus(); hex.select();
+  }
+
+  document.querySelectorAll('#paletteContent .swatch').forEach(sw => {
+    const idx = parseInt(sw.dataset.cidx ?? sw.dataset.idx ?? 0);
+    sw.addEventListener('click', () => openColourPopup(sw, idx));
+    sw.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' ') { e.preventDefault(); openColourPopup(sw, idx); }});
   });
   initExportBar();
   initSearch();
